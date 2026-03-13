@@ -175,6 +175,7 @@ function SectionCard({
           {/* Story sections */}
           {config.type === "story" && (
             <>
+              <Field label="Section label" value={content.section_label ?? ""} onChange={(v) => set("section_label", v)} />
               <Field label="Headline (line 1)" value={content.headline1 ?? ""} onChange={(v) => set("headline1", v)} />
               <Field label="Headline (line 2, italic)" value={content.headline2 ?? ""} onChange={(v) => set("headline2", v)} />
               {body.map((para, i) => (

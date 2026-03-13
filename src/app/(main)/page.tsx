@@ -37,7 +37,7 @@ export default async function Home() {
 
       {/* The Entry */}
       <StorySection
-        sectionLabel="The Entry"
+        sectionLabel={s.entry?.section_label ?? "The Entry"}
         headline1={s.entry?.headline1 ?? "THE HOUSE"}
         headline2={s.entry?.headline2 ?? "Reveals Itself"}
         body={s.entry?.body ?? []}
@@ -56,7 +56,7 @@ export default async function Home() {
 
       {/* The Kitchen */}
       <StorySection
-        sectionLabel="The Kitchen"
+        sectionLabel={s.kitchen?.section_label ?? "The Kitchen"}
         headline1={s.kitchen?.headline1 ?? "THE ROOM"}
         headline2={s.kitchen?.headline2 ?? "Everyone Gathers In"}
         body={s.kitchen?.body ?? []}
@@ -75,7 +75,7 @@ export default async function Home() {
 
       {/* The Living Room */}
       <StorySection
-        sectionLabel="The Living Room"
+        sectionLabel={s["living-room"]?.section_label ?? "The Living Room"}
         headline1={s["living-room"]?.headline1 ?? "LIGHT THAT"}
         headline2={s["living-room"]?.headline2 ?? "Changes"}
         body={s["living-room"]?.body ?? []}
@@ -94,7 +94,7 @@ export default async function Home() {
 
       {/* The Retreat */}
       <StorySection
-        sectionLabel="The Retreat"
+        sectionLabel={s.retreat?.section_label ?? "The Retreat"}
         headline1={s.retreat?.headline1 ?? "DESIGNED FOR"}
         headline2={s.retreat?.headline2 ?? "Still"}
         body={s.retreat?.body ?? []}
