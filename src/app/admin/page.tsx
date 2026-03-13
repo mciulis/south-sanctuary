@@ -12,7 +12,7 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
-  const [tab, setTab] = useState<"estate" | "gallery" | "homepage">("estate");
+  const [tab, setTab] = useState<"estate" | "gallery" | "homepage">("homepage");
 
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
@@ -66,7 +66,7 @@ export default function AdminPage() {
           South Sanctuary — Admin
         </p>
         <div className="flex gap-1">
-          {(["estate", "gallery", "homepage"] as const).map((t) => (
+          {(["homepage", "gallery", "estate"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
