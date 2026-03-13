@@ -8,18 +8,19 @@ export default function EstateCta() {
           className="font-display font-light text-white leading-[0.9] mb-2"
           style={{ fontSize: "clamp(42px, 7vw, 88px)" }}
         >
-          EVERYTHING INSIDE
+          THE COLLECTION
         </h2>
         <h2
           className="font-display font-light italic text-white leading-[0.9] mb-12"
           style={{ fontSize: "clamp(42px, 7vw, 88px)" }}
         >
-          Has a Story Too
+          Is Now Available
         </h2>
         <p className="text-base text-white/70 leading-relaxed max-w-md mx-auto mb-12">
-          The furniture was collected over years — from makers we love, for
-          rooms we&apos;ve lived in deeply. Now it&apos;s available for its next
-          home. Each piece is priced for a fair, fast sale.
+          Every piece in this home was chosen deliberately — for its material,
+          its warmth, its relationship to the room it would live in. The full
+          collection is now available, offered fairly to someone who will give
+          it a second life.
         </p>
         <Link
           href="/estate-sale"

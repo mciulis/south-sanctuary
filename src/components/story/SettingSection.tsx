@@ -7,31 +7,24 @@ export default function SettingSection() {
         </p>
         <h2
           className="font-display font-light text-white leading-[0.9] mb-2"
-          style={{ fontSize: "clamp(48px, 8vw, 96px)" }}
+          style={{ fontSize: "clamp(44px, 7vw, 88px)" }}
         >
           TUCKED INTO
         </h2>
         <h2
           className="font-display font-light italic text-white leading-[0.9] mb-14"
-          style={{ fontSize: "clamp(48px, 8vw, 96px)" }}
+          style={{ fontSize: "clamp(44px, 7vw, 88px)" }}
         >
           The Trees
         </h2>
-        <div className="space-y-6 text-left md:text-center">
-          <p className="text-base text-white/75 leading-relaxed">
-            The street ends here. No through traffic. No overhead lines —
-            everything buried, the sky uninterrupted.
-          </p>
-          <p className="text-base text-white/75 leading-relaxed">
-            A small creek runs through the property beyond the trees, a few
-            hundred feet back. On still mornings, you can hear it. The lots on
-            this side are twice the size of those across the street. Space,
-            here, is not incidental. It is the premise.
-          </p>
-          <p className="text-base text-white/75 leading-relaxed">
-            The city is minutes away. You would never know it.
-          </p>
-        </div>
+        <p className="text-base text-white/75 leading-relaxed max-w-xl mx-auto">
+          Tucked into a corner of the city, on a quiet dead-end street, backed
+          against the private wooded greenery that defines Portland&apos;s best
+          neighborhoods — the modest exterior gives little away. Step inside and
+          the house opens into something unexpected: breathtaking sightlines,
+          natural light pouring through a south-facing wall of windows, and a
+          forest that changes with every season.
+        </p>
       </div>
     </section>
   );
