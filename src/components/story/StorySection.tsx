@@ -32,12 +32,12 @@ export default function StorySection({
   detailPosition = "bottom",
   bg = "cream",
 }: StorySectionProps) {
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState<StoryImage | null>(null);
   const bgClass = bg === "cream" ? "bg-ss-cream" : "bg-ss-cream-dark";
 
   const DetailCard = detailImage ? (
     <button
-      onClick={() => setLightboxOpen(true)}
+      onClick={() => setLightboxImage(detailImage)}
       className={`w-[40%] shadow-[0_4px_28px_rgba(0,0,0,0.10)] overflow-hidden cursor-zoom-in ${
         imagePosition === "right" ? "mr-auto" : "ml-auto"
       }`}
@@ -59,7 +59,6 @@ export default function StorySection({
     <div
       className={`flex flex-col justify-center px-10 md:px-14 py-16 md:py-24 ${bgClass}`}
     >
-      {/* Desktop-only: top position */}
       {detailPosition === "top" && DetailCard && (
         <div className="mb-10 hidden md:block">{DetailCard}</div>
       )}
@@ -80,7 +79,6 @@ export default function StorySection({
         {headline2}
       </h2>
 
-      {/* Desktop-only: middle position */}
       {detailPosition === "middle" && DetailCard && (
         <div className="mb-8 hidden md:block">{DetailCard}</div>
       )}
@@ -93,11 +91,8 @@ export default function StorySection({
         ))}
       </div>
 
-      {/* Mobile: always after body. Desktop: only when detailPosition="bottom" */}
       {DetailCard && (
-        <div
-          className={`mt-10 ${detailPosition !== "bottom" ? "md:hidden" : ""}`}
-        >
+        <div className={`mt-10 ${detailPosition !== "bottom" ? "md:hidden" : ""}`}>
           {DetailCard}
         </div>
       )}
@@ -105,20 +100,22 @@ export default function StorySection({
   );
 
   const imageColumn = (
-    <div className="relative h-full min-h-[70vw] md:min-h-0">
+    <button
+      onClick={() => setLightboxImage(mainImage)}
+      className="relative h-full min-h-[70vw] md:min-h-0 w-full cursor-zoom-in block"
+    >
       <Image
         src={mainImage.src}
         alt={mainImage.alt}
         fill
-        className="object-cover"
+        className="object-cover transition-transform duration-500 hover:scale-[1.02]"
       />
-    </div>
+    </button>
   );
 
   return (
     <>
       <section className={`grid md:grid-cols-2 ${bgClass}`}>
-        {/* Image is always first in DOM so it appears on top on mobile */}
         <div className={imagePosition === "right" ? "md:order-2" : ""}>
           {imageColumn}
         </div>
@@ -128,14 +125,13 @@ export default function StorySection({
       </section>
 
       {/* Lightbox */}
-      {lightboxOpen && detailImage && (
+      {lightboxImage && (
         <div
           className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center"
-          onClick={() => setLightboxOpen(false)}
+          onClick={() => setLightboxImage(null)}
         >
-          {/* Close button */}
           <button
-            onClick={() => setLightboxOpen(false)}
+            onClick={() => setLightboxImage(null)}
             className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors z-10"
             aria-label="Close"
           >
@@ -144,15 +140,13 @@ export default function StorySection({
               <line x1="24" y1="4" x2="4" y2="24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
-
-          {/* Image */}
           <div
             className="relative w-full h-full"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={detailImage.src}
-              alt={detailImage.alt}
+              src={lightboxImage.src}
+              alt={lightboxImage.alt}
               fill
               className="object-contain"
               sizes="100vw"
