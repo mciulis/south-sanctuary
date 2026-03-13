@@ -11,7 +11,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 interface GallerySection {
   id: number;
-  label: string;
+  name: string;
   sort_order: number;
 }
 
@@ -92,7 +92,7 @@ export default function GalleryGrid() {
           return (
             <div key={section.id}>
               <p className="text-[10px] tracking-[0.28em] text-ss-taupe uppercase mb-6">
-                {section.label}
+                {section.name}
               </p>
               <RowsPhotoAlbum
                 photos={albumPhotos}

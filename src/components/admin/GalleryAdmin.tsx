@@ -23,7 +23,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 interface GallerySection {
   id: number;
-  label: string;
+  name: string;
   sort_order: number;
 }
 
@@ -108,7 +108,7 @@ function SortableSectionRow({
     useSortable({ id: section.id });
 
   const [editing, setEditing] = useState(false);
-  const [label, setLabel] = useState(section.label);
+  const [label, setLabel] = useState(section.name);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -153,7 +153,7 @@ function SortableSectionRow({
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             onBlur={() => { setEditing(false); onRename(label); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { setEditing(false); onRename(label); } if (e.key === "Escape") { setEditing(false); setLabel(section.label); } }}
+            onKeyDown={(e) => { if (e.key === "Enter") { setEditing(false); onRename(label); } if (e.key === "Escape") { setEditing(false); setLabel(section.name); } }}
             className="flex-1 border-b border-gray-400 bg-transparent text-sm font-medium focus:outline-none"
           />
         ) : (
@@ -260,9 +260,9 @@ export default function GalleryAdmin() {
     );
   }
 
-  async function renameSection(id: number, label: string) {
-    await supabase.from("gallery_sections").update({ label }).eq("id", id);
-    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, label } : s)));
+  async function renameSection(id: number, name: string) {
+    await supabase.from("gallery_sections").update({ name }).eq("id", id);
+    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, name } : s)));
   }
 
   async function deleteSection(id: number) {
@@ -284,7 +284,7 @@ export default function GalleryAdmin() {
     const sort_order = sections.length;
     const { data } = await supabase
       .from("gallery_sections")
-      .insert({ label: newLabel.trim(), sort_order })
+      .insert({ name: newLabel.trim(), sort_order })
       .select()
       .single();
     if (data) {
