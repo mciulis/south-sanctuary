@@ -18,13 +18,13 @@ export default function GalleryPage() {
           className="font-display font-light text-ss-ink leading-[0.9] mb-1"
           style={{ fontSize: "clamp(52px, 8vw, 100px)" }}
         >
-          A WALK
+          A JOURNEY
         </h1>
         <h1
           className="font-display font-light italic text-ss-ink leading-[0.9]"
           style={{ fontSize: "clamp(52px, 8vw, 100px)" }}
         >
-          Through the House
+          Through Home
         </h1>
       </section>
 
