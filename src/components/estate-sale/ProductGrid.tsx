@@ -20,6 +20,13 @@ const ROOM_ORDER = [
 
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [activeRoom, setActiveRoom] = useState<string>("All");
+  const [availableNow, setAvailableNow] = useState(false);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const rooms = useMemo(() => {
     const present = new Set(products.map((p) => p.room).filter(Boolean) as string[]);
@@ -27,14 +34,20 @@ export default function ProductGrid({ products }: { products: Product[] }) {
   }, [products]);
 
   const filtered = useMemo(() => {
-    if (activeRoom === "All") return products;
-    return products.filter((p) => p.room === activeRoom);
-  }, [products, activeRoom]);
+    let list = activeRoom === "All" ? products : products.filter((p) => p.room === activeRoom);
+    if (availableNow) {
+      list = list.filter((p) => {
+        if (!p.available_by) return true; // no date = assume available
+        return new Date(p.available_by + "T00:00:00") <= today;
+      });
+    }
+    return list;
+  }, [products, activeRoom, availableNow, today]);
 
   return (
     <>
-      {/* Filter tabs */}
-      <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center mb-12">
+      {/* Filter row */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 justify-center mb-12">
         {["All", ...rooms].map((room) => (
           <button
             key={room}
@@ -48,6 +61,17 @@ export default function ProductGrid({ products }: { products: Product[] }) {
             {room}
           </button>
         ))}
+        <span className="text-ss-taupe/30 text-[10px]">|</span>
+        <button
+          onClick={() => setAvailableNow((v) => !v)}
+          className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
+            availableNow
+              ? "text-ss-ink border-b border-ss-ink"
+              : "text-ss-taupe hover:text-ss-ink"
+          }`}
+        >
+          Available now
+        </button>
       </div>
 
       {/* Grid */}

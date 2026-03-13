@@ -42,6 +42,14 @@ export default function ProductDetail({ product, images }: Props) {
 
   const brand = extractBrand(product.full_name);
   const condition = conditionLabel[product.condition] || "";
+  const availableLabel = (() => {
+    if (!product.available_by) return null;
+    const date = new Date(product.available_by + "T00:00:00");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date <= today) return "Available now";
+    return "Available " + date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  })();
   const isUnavailable =
     reserved || product.status !== "available" || product.units_available === 0;
   const hasDiscount =
@@ -138,7 +146,7 @@ export default function ProductDetail({ product, images }: Props) {
               </p>
             )}
 
-            {/* Condition + room */}
+            {/* Condition + room + availability */}
             <div className="flex gap-4 mb-8 flex-wrap">
               {condition && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
@@ -148,6 +156,11 @@ export default function ProductDetail({ product, images }: Props) {
               {product.room && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {product.room}
+                </span>
+              )}
+              {availableLabel && (
+                <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
+                  {availableLabel}
                 </span>
               )}
             </div>

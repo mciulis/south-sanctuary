@@ -1,6 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Product, conditionLabel } from "@/types/estate";
+import { Product } from "@/types/estate";
+
+function formatAvailableBy(dateStr: string | null): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (date <= today) return "Available now";
+  return "Available " + date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -16,9 +25,9 @@ function extractBrand(fullName: string): string | null {
 
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
-  const condition = conditionLabel[product.condition] || "";
   const isUnavailable = product.status !== "available" || product.units_available === 0;
   const brand = extractBrand(product.full_name);
+  const availableLabel = formatAvailableBy(product.available_by);
   const hasDiscount =
     product.discount_percent &&
     product.discount_percent !== "0%" &&
@@ -86,8 +95,8 @@ export default function ProductCard({ product }: { product: Product }) {
             </>
           )}
         </div>
-        {condition && (
-          <p className="text-[10px] text-ss-taupe/70 mt-0.5">{condition}</p>
+        {availableLabel && (
+          <p className="text-[10px] text-ss-taupe/70 mt-0.5">{availableLabel}</p>
         )}
       </div>
     </Link>

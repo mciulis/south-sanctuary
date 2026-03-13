@@ -98,12 +98,13 @@ export default function EstateSaleAdmin() {
 
       <div className="bg-white border border-gray-200 rounded overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[48px_2fr_1fr_120px_140px_110px_80px_80px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
+        <div className="grid grid-cols-[48px_2fr_1fr_120px_140px_130px_110px_80px_80px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
           <span></span>
           <span>Item</span>
           <span>Room</span>
           <span>Price</span>
           <span>Condition</span>
+          <span>Available By</span>
           <span>Status</span>
           <span>Photos</span>
           <span></span>
@@ -115,7 +116,7 @@ export default function EstateSaleAdmin() {
           return (
             <div
               key={product.id}
-              className="grid grid-cols-[48px_2fr_1fr_120px_140px_110px_80px_80px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
+              className="grid grid-cols-[48px_2fr_1fr_120px_140px_130px_110px_80px_80px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
             >
               {/* Thumbnail */}
               <div className="w-10 h-10 bg-gray-100 overflow-hidden flex-shrink-0">
@@ -165,6 +166,14 @@ export default function EstateSaleAdmin() {
                   </option>
                 ))}
               </select>
+
+              {/* Available By */}
+              <input
+                type="date"
+                value={getVal(product, "available_by") ?? ""}
+                onChange={(e) => edit(product.id, "available_by", e.target.value || null)}
+                className="text-xs border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:border-gray-500 w-full"
+              />
 
               {/* Status */}
               <select
