@@ -26,6 +26,11 @@ export const metadata: Metadata = {
     description: "A peaceful home tucked into the trees.",
     siteName: "South Sanctuary",
   },
+  formatDetection: {
+    address: false,
+    telephone: false,
+    email: false,
+  },
 };
 
 export default function RootLayout({

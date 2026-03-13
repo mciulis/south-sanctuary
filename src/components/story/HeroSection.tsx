@@ -14,7 +14,7 @@ export default function HeroSection() {
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
         <p className="text-[11px] tracking-[0.3em] text-white/75 uppercase mb-10">
-          230 S Canby · Portland, Oregon
+          230 S Canby
         </p>
         <h1
           className="font-display font-light text-white leading-[0.9]"
@@ -28,6 +28,9 @@ export default function HeroSection() {
         >
           Sanctuary
         </h1>
+        <p className="mt-8 text-[11px] tracking-[0.3em] text-white/50 uppercase">
+          Portland, Oregon
+        </p>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
