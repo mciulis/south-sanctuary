@@ -9,10 +9,20 @@ function getPhotoUrl(filename: string | null): string | null {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
 }
 
+function extractBrand(fullName: string): string | null {
+  const parts = fullName.split(" \u2013 "); // em dash
+  return parts.length > 1 ? parts[0].trim() : null;
+}
+
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
   const condition = conditionLabel[product.condition] || "";
   const isUnavailable = product.status !== "available" || product.units_available === 0;
+  const brand = extractBrand(product.full_name);
+  const hasDiscount =
+    product.discount_percent &&
+    product.discount_percent !== "0%" &&
+    product.discount_percent !== "-10%";
 
   return (
     <Link href={`/estate-sale/${product.id}`} className="group block">
@@ -53,22 +63,32 @@ export default function ProductCard({ product }: { product: Product }) {
 
       {/* Info */}
       <div>
-        <p className="text-[11px] text-ss-ink leading-snug mb-0.5">{product.name}</p>
-        {condition && (
-          <p className="text-[10px] text-ss-taupe tracking-wide mb-0.5">{condition}</p>
+        {brand && (
+          <p className="text-[10px] tracking-[0.15em] text-ss-taupe uppercase mb-0.5">
+            {brand}
+          </p>
         )}
-        <div className="flex items-baseline gap-2">
-          <p className="text-[11px] text-ss-ink">
+        <p className="text-[11px] text-ss-ink leading-snug mb-1">{product.name}</p>
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <p className="text-[12px] text-ss-ink font-medium">
             {product.sale_price != null
               ? `$${product.sale_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
               : "Make an offer"}
           </p>
-          {product.retail_price != null && product.discount_percent && product.discount_percent !== "0%" && (
-            <p className="text-[10px] text-ss-taupe line-through">
-              ${product.retail_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </p>
+          {product.retail_price != null && hasDiscount && (
+            <>
+              <p className="text-[10px] text-ss-taupe/60 line-through">
+                ${product.retail_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </p>
+              <p className="text-[10px] text-ss-taupe">
+                {product.discount_percent} off
+              </p>
+            </>
           )}
         </div>
+        {condition && (
+          <p className="text-[10px] text-ss-taupe/70 mt-0.5">{condition}</p>
+        )}
       </div>
     </Link>
   );
