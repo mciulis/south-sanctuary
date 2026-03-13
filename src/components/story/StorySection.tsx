@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 
 interface StoryImage {
@@ -29,11 +32,13 @@ export default function StorySection({
   detailPosition = "bottom",
   bg = "cream",
 }: StorySectionProps) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const bgClass = bg === "cream" ? "bg-ss-cream" : "bg-ss-cream-dark";
 
   const DetailCard = detailImage ? (
-    <div
-      className={`w-[40%] shadow-[0_4px_28px_rgba(0,0,0,0.10)] overflow-hidden ${
+    <button
+      onClick={() => setLightboxOpen(true)}
+      className={`w-[40%] shadow-[0_4px_28px_rgba(0,0,0,0.10)] overflow-hidden cursor-zoom-in ${
         imagePosition === "right" ? "mr-auto" : "ml-auto"
       }`}
     >
@@ -44,10 +49,10 @@ export default function StorySection({
           src={detailImage.src}
           alt={detailImage.alt}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-500 hover:scale-[1.03]"
         />
       </div>
-    </div>
+    </button>
   ) : null;
 
   const textColumn = (
@@ -111,14 +116,50 @@ export default function StorySection({
   );
 
   return (
-    <section className={`grid md:grid-cols-2 ${bgClass}`}>
-      {/* Image is always first in DOM so it appears on top on mobile */}
-      <div className={imagePosition === "right" ? "md:order-2" : ""}>
-        {imageColumn}
-      </div>
-      <div className={imagePosition === "right" ? "md:order-1" : ""}>
-        {textColumn}
-      </div>
-    </section>
+    <>
+      <section className={`grid md:grid-cols-2 ${bgClass}`}>
+        {/* Image is always first in DOM so it appears on top on mobile */}
+        <div className={imagePosition === "right" ? "md:order-2" : ""}>
+          {imageColumn}
+        </div>
+        <div className={imagePosition === "right" ? "md:order-1" : ""}>
+          {textColumn}
+        </div>
+      </section>
+
+      {/* Lightbox */}
+      {lightboxOpen && detailImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/92 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-5 right-5 text-white/70 hover:text-white transition-colors z-10"
+            aria-label="Close"
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <line x1="4" y1="4" x2="24" y2="24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="24" y1="4" x2="4" y2="24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {/* Image */}
+          <div
+            className="relative w-full h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={detailImage.src}
+              alt={detailImage.alt}
+              fill
+              className="object-contain"
+              sizes="100vw"
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
