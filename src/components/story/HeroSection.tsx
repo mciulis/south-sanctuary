@@ -20,6 +20,14 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
       <div className="absolute inset-0 bg-ss-ink/48" />
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+        <div className="mb-8 flex flex-col items-center gap-1.5">
+          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
+            230 S Canby
+          </p>
+          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
+            Portland, OR USA
+          </p>
+        </div>
         <h1
           className="font-display font-light text-white leading-[0.9]"
           style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
@@ -32,14 +40,9 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
         >
           {headline2}
         </h1>
-        <div className="mt-8 flex flex-col items-center gap-1.5">
-          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
-            230 S Canby
-          </p>
-          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
-            Portland, OR USA
-          </p>
-        </div>
+        <p className="mt-8 text-[11px] tracking-[0.3em] text-white/60 uppercase">
+          Coming May 2026
+        </p>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
