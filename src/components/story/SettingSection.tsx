@@ -18,12 +18,13 @@ export default function SettingSection() {
           The Trees
         </h2>
         <p className="text-base text-white/75 leading-relaxed max-w-xl mx-auto">
-          Tucked into a corner of the city, on a quiet dead-end street, backed
-          against the private wooded greenery that defines Portland&apos;s best
-          neighborhoods — the modest exterior gives little away. Step inside and
+          Tucked into a quiet corner of the city, on a private street that ends
+          at the trees, the modest exterior gives little away. Step inside and
           the house opens into something unexpected: breathtaking sightlines,
           natural light pouring through a south-facing wall of windows, and a
-          forest that changes with every season.
+          forest that serves as an ever-changing canvas — summer&apos;s dense
+          green canopy, autumn&apos;s amber and rust, winter&apos;s bare
+          branches opening the view all the way to the sky.
         </p>
       </div>
     </section>

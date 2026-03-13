@@ -13,7 +13,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-ss-ink/48" />
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-        <p className="text-[11px] tracking-[0.3em] text-white/50 uppercase mb-10">
+        <p className="text-[11px] tracking-[0.3em] text-white/75 uppercase mb-10">
           230 S Canby · Portland, Oregon
         </p>
         <h1
@@ -28,9 +28,6 @@ export default function HeroSection() {
         >
           Sanctuary
         </h1>
-        <p className="mt-10 text-sm text-white/40 italic font-display tracking-wide">
-          A home at the end of a quiet street.
-        </p>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">

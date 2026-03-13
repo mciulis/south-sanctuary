@@ -33,7 +33,7 @@ export default function StorySection({
 
   const DetailCard = detailImage ? (
     <div
-      className={`w-[58%] shadow-[0_4px_28px_rgba(0,0,0,0.10)] overflow-hidden ${
+      className={`w-[40%] shadow-[0_4px_28px_rgba(0,0,0,0.10)] overflow-hidden ${
         imagePosition === "right" ? "mr-auto" : "ml-auto"
       }`}
     >
@@ -54,8 +54,9 @@ export default function StorySection({
     <div
       className={`flex flex-col justify-center px-10 md:px-14 py-16 md:py-24 ${bgClass}`}
     >
+      {/* Desktop-only: top position */}
       {detailPosition === "top" && DetailCard && (
-        <div className="mb-10">{DetailCard}</div>
+        <div className="mb-10 hidden md:block">{DetailCard}</div>
       )}
 
       <p className="text-[10px] tracking-[0.28em] text-ss-taupe uppercase mb-8">
@@ -74,8 +75,9 @@ export default function StorySection({
         {headline2}
       </h2>
 
+      {/* Desktop-only: middle position */}
       {detailPosition === "middle" && DetailCard && (
-        <div className="mb-8">{DetailCard}</div>
+        <div className="mb-8 hidden md:block">{DetailCard}</div>
       )}
 
       <div className="space-y-5 max-w-sm">
@@ -86,14 +88,19 @@ export default function StorySection({
         ))}
       </div>
 
-      {detailPosition === "bottom" && DetailCard && (
-        <div className="mt-10">{DetailCard}</div>
+      {/* Mobile: always after body. Desktop: only when detailPosition="bottom" */}
+      {DetailCard && (
+        <div
+          className={`mt-10 ${detailPosition !== "bottom" ? "md:hidden" : ""}`}
+        >
+          {DetailCard}
+        </div>
       )}
     </div>
   );
 
   const imageColumn = (
-    <div className="relative min-h-[320px] md:min-h-[620px]">
+    <div className="relative h-full min-h-[70vw] md:min-h-0">
       <Image
         src={mainImage.src}
         alt={mainImage.alt}
@@ -105,17 +112,13 @@ export default function StorySection({
 
   return (
     <section className={`grid md:grid-cols-2 ${bgClass}`}>
-      {imagePosition === "left" ? (
-        <>
-          {imageColumn}
-          {textColumn}
-        </>
-      ) : (
-        <>
-          {textColumn}
-          {imageColumn}
-        </>
-      )}
+      {/* Image is always first in DOM so it appears on top on mobile */}
+      <div className={imagePosition === "right" ? "md:order-2" : ""}>
+        {imageColumn}
+      </div>
+      <div className={imagePosition === "right" ? "md:order-1" : ""}>
+        {textColumn}
+      </div>
     </section>
   );
 }

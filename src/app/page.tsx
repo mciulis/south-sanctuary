@@ -62,19 +62,19 @@ export default function Home() {
         headline2="Changes"
         body={[
           "The main room earns its name. Tall ceilings draw the eye up while eleven south-facing windows draw it outward — into the trees, into the light, into a view that shifts through the day without ever feeling harsh or overexposed.",
-          "It's the kind of room that makes you want to slow down: to read, to host, to watch a winter afternoon turn amber through the glass. The forest is the furniture here. Everything else is secondary.",
+          "The light tells time here. In summer, the dense canopy filters the sun into dappled patterns that move through the afternoon. By autumn the trees turn amber and rust, and the room glows with it. In winter, the bare branches open the view all the way through — and on the brightest days, the south light floods every corner of the floor.",
+          "It's the kind of room that makes you want to slow down: to read, to host, to watch the season change through the glass. The forest is the furniture here. Everything else is secondary.",
         ]}
         mainImage={{
-          src: "/images/home/gallery-living-east-01.jpg",
-          alt: "The living room with floor-to-ceiling south-facing windows and the forest beyond",
+          src: "/images/home/retreat-drinks-room-landscape-01.jpg",
+          alt: "The living room looking south through eleven windows into the forest canopy",
         }}
         detailImage={{
-          src: "/images/home/retreat-drinks-room-portrait-01.jpg",
-          alt: "Overhead view of the living space looking down through the south windows",
-          portrait: true,
+          src: "/images/home/retreat-drinks-room-south-window-01.jpg",
+          alt: "Looking out through the south-facing windows into the trees",
         }}
         imagePosition="left"
-        detailPosition="middle"
+        detailPosition="bottom"
         bg="cream"
       />
 
