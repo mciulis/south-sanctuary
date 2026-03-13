@@ -40,7 +40,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
         >
           {headline2}
         </h1>
-        <p className="mt-8 text-[11px] tracking-[0.3em] text-white/60 uppercase">
+        <p className="mt-8 text-[11px] tracking-[0.3em] text-white font-medium uppercase">
           Coming May 2026
         </p>
       </div>
