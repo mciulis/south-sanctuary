@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "GALLERY", href: "/gallery" },
   { label: "ESTATE SALE", href: "/estate-sale" },
   { label: "CONTACT", href: "/contact" },
+  { label: "RECORDS", href: "/records" },
 ];
 
 export default function Nav() {
