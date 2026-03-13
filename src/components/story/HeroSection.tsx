@@ -13,9 +13,6 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-ss-ink/48" />
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-        <p className="text-[11px] tracking-[0.3em] text-white/75 uppercase mb-10">
-          230 S Canby
-        </p>
         <h1
           className="font-display font-light text-white leading-[0.9]"
           style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
@@ -28,9 +25,14 @@ export default function HeroSection() {
         >
           Sanctuary
         </h1>
-        <p className="mt-8 text-[11px] tracking-[0.3em] text-white/50 uppercase">
-          Portland, Oregon
-        </p>
+        <div className="mt-8 flex flex-col items-center gap-1.5">
+          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
+            230 S Canby
+          </p>
+          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
+            Portland, OR USA
+          </p>
+        </div>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
