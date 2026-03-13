@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Product, conditionLabel } from "@/types/estate";
 import ReserveForm from "./ReserveForm";
+import Carousel from "@/components/ui/Carousel";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -30,6 +31,7 @@ interface Props {
 
 export default function ProductDetail({ product, images }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [carouselOpen, setCarouselOpen] = useState(false);
   const [showReserve, setShowReserve] = useState(false);
   const [reserved, setReserved] = useState(false);
 
@@ -64,13 +66,16 @@ export default function ProductDetail({ product, images }: Props) {
           {/* Photos */}
           <div>
             {/* Main photo */}
-            <div className="relative aspect-square bg-ss-cream-dark overflow-hidden mb-3">
+            <button
+              onClick={() => photos.length > 0 && setCarouselOpen(true)}
+              className={`relative aspect-square bg-ss-cream-dark overflow-hidden mb-3 w-full block ${photos.length > 0 ? "cursor-zoom-in" : ""}`}
+            >
               {photos.length > 0 ? (
                 <Image
                   src={photos[activeIndex]}
                   alt={product.name}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-500 hover:scale-[1.02]"
                   priority
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
@@ -81,7 +86,7 @@ export default function ProductDetail({ product, images }: Props) {
                   </p>
                 </div>
               )}
-            </div>
+            </button>
 
             {/* Thumbnail strip */}
             {photos.length > 1 && (
@@ -214,6 +219,16 @@ export default function ProductDetail({ product, images }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Photo carousel */}
+      {carouselOpen && photos.length > 0 && (
+        <Carousel
+          slides={photos.map((url) => ({ src: url, alt: product.name }))}
+          startIndex={activeIndex}
+          onClose={() => setCarouselOpen(false)}
+          onIndexChange={(i) => setActiveIndex(i)}
+        />
+      )}
 
       {/* Reserve modal */}
       {showReserve && (
