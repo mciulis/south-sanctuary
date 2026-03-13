@@ -84,52 +84,136 @@ About the neighborhood:
 
 ---
 
-## Draft Copy — Story Page
+## FINAL Copy — Story Page
 
-*To be written section by section as we build. Draft here first, then move into code.*
+*Approved and ready to drop into code.*
 
-### Hero Headline (2–3 words + italic qualifier)
-Options:
-- "A QUIET *SANCTUARY*"
-- "SOUTH *SANCTUARY*"
-- "TUCKED *INTO THE TREES*"
+---
 
-### Hero Subheadline
-"230 S Canby — Portland, Oregon"
+### HERO
 
-### Intro Paragraph (draft)
-> There's a certain kind of house that doesn't announce itself.
-> South Sanctuary sits at the end of a quiet street, the city just minutes away, the forest pressed close behind it.
-> It asks nothing of you. It simply holds you.
+**Headline (display, all-caps serif):**
+SOUTH
 
-### The Setting (draft)
-> A dead-end street with no overhead lines — everything buried, nothing interrupting the sky.
-> A small creek runs through the property beyond the trees. On still mornings, you can hear it.
-> The lots on this side of the street are double the size of those across from it. Space, here, is not a luxury. It is the premise.
+**Headline cont. (display, italic serif):**
+*Sanctuary*
 
-### The Arrival (draft)
-> Custom glass railings greet you at the entry — a quiet architectural gesture that frames what's ahead.
-> As you descend to the main floor, the room opens. Eleven windows face south. The light that comes through them is not fixed; it moves through the day, through the seasons, always soft, always changing.
+**Subline (small caps, spaced):**
+230 S Canby · Portland, Oregon
 
-### The Kitchen (draft — to be expanded)
-> The island is wide enough for two people cooking and four people gathering around.
-> A fireplace sits at one end of the kitchen. The dining table belongs here too.
+**Pull quote beneath (optional — one quiet line):**
+*A home at the end of a quiet street.*
 
-### The Deck (draft)
-> Eight hundred and fifty square feet. Multi-tiered.
-> A direct gas line means you never run out — the grill is always ready.
-> The deck was just renewed: boards replaced, cleaned, painted.
-> Private in every direction. A place you won't want to leave.
+---
 
-### The Master Suite (draft)
-> The master bathroom was designed after a café we found in Bratislava — a place called Fach.
-> In the middle of a noisy city, it was absolutely still.
-> That stillness is what we wanted here.
+### QUOTE (between Hero and The Setting)
+**Treatment:** Centered on cream background. Large italic Cormorant. No section label. Just the words and the attribution beneath in small spaced caps.
 
-### Transition to Estate Sale (draft)
-> Everything inside has a story, too.
-> The furniture — collected over years from makers we love — is available to its next home.
-> [→ Browse the Collection]
+> *"Home is a refuge, a shelter from the storms, a sanctuary that steadies us when the world feels unkind."*
+>
+> — Mary Anne Byrne
+
+---
+
+### THE SETTING
+**Section label:** THE SETTING
+
+**Headline:**
+TUCKED INTO
+*The Trees*
+
+**Body:**
+The street ends here. No through traffic. No overhead lines — everything buried, the sky uninterrupted.
+
+A small creek runs through the property beyond the trees, a few hundred feet back. On still mornings, you can hear it. The lots on this side are twice the size of those across the street. Space, here, is not incidental. It is the premise.
+
+The city is minutes away. You would never know it.
+
+---
+
+### THE LIVING
+**Section label:** THE LIVING
+
+**Headline:**
+LIGHT THAT
+*Changes*
+
+**Body:**
+As you descend to the main floor, the room opens.
+
+Eleven south-facing windows line the wall. The forest fills them. The light that comes through is never harsh — it shifts through the day, through the seasons, from pale morning gold to long afternoon amber. Double-height ceilings. Glass railings at the entry that frame the view before you've even stepped inside.
+
+This room doesn't need decorating. The trees do that.
+
+---
+
+### THE KITCHEN
+**Section label:** THE KITCHEN
+
+**Headline:**
+THE ROOM
+*Everyone Gathers In*
+
+**Body:**
+The island is deeper than most — built for cooking alongside someone, and for four people to lean in around it.
+
+Dark matte cabinetry. White quartz. Copper pendants overhead. A westward window that catches the afternoon. At the far end, a fireplace. The dining table lives here too, because this room always becomes the center of things.
+
+It is, without meaning to be, the best room in the house for a conversation.
+
+---
+
+### THE DECK
+**Section label:** THE DECK
+
+**Headline:**
+EIGHT HUNDRED
+*Fifty Square Feet*
+
+**Body:**
+Multi-tiered, so each level has its own mood. The main deck stretches wide — room for a long table, chairs, and still space left over. A gas line runs directly to the grill, so you never think about propane. Water access, too.
+
+The boards were just replaced. Cleaned and painted. It's ready.
+
+Private in every direction. Trees on all sides. Above, the master bedroom has its own deck — smaller, quieter, for mornings alone.
+
+This is an outdoor room. A second living space. A place the summer makes essential.
+
+---
+
+### THE RETREAT
+**Section label:** THE RETREAT
+
+**Headline:**
+DESIGNED FOR
+*Still*
+
+**Body:**
+We found a café in Bratislava — a place called Fach. In the middle of the city, it was absolutely quiet. Warm wood. Clean lines. A room that asked nothing of you.
+
+That's what we wanted for the master bathroom.
+
+The soaking tub sits in a niche framed by a window to the trees. A floating oak vanity. A glass shower. Everything considered, nothing excess. The master bedroom has its own private deck, and a closet that glows warm when you open it.
+
+It is the kind of retreat that makes the rest of the house feel even better by contrast.
+
+---
+
+### ESTATE SALE TRANSITION
+**Section label:** (none — transition block)
+
+**Headline:**
+EVERYTHING INSIDE
+*Has a Story Too*
+
+**Body:**
+The furniture was collected over years — from makers we love, for rooms we've lived in deeply. Now it's available for its next home.
+
+Each piece is priced for a fair, fast sale. Browse the full collection below.
+
+**CTA button:** Browse the Collection →
+
+---
 
 ---
 
