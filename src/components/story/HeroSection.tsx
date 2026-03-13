@@ -1,10 +1,17 @@
 import Image from "next/image";
 
-export default function HeroSection() {
+interface HeroContent {
+  headline1?: string;
+  headline2?: string;
+  mainPhoto?: string;
+}
+
+export default function HeroSection({ content = {} }: { content?: HeroContent }) {
+  const { headline1 = "South", headline2 = "Sanctuary", mainPhoto = "/images/home/hero-forest-view-01.jpg" } = content;
   return (
     <section className="relative h-screen w-full overflow-hidden">
       <Image
-        src="/images/home/hero-forest-view-01.jpg"
+        src={mainPhoto}
         alt="The forest behind South Sanctuary"
         fill
         className="object-cover"
@@ -17,13 +24,13 @@ export default function HeroSection() {
           className="font-display font-light text-white leading-[0.9]"
           style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
         >
-          South
+          {headline1}
         </h1>
         <h1
           className="font-display font-light italic text-white leading-[0.9]"
           style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
         >
-          Sanctuary
+          {headline2}
         </h1>
         <div className="mt-8 flex flex-col items-center gap-1.5">
           <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
