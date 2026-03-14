@@ -3,6 +3,7 @@ import {
   Zap, Car, MapPin, Lightbulb, Leaf, Heart, Package, Wrench, Trees, Sun,
 } from "lucide-react";
 import BlueprintGrid from "@/components/records/BlueprintGrid";
+import PaintGrid from "@/components/records/PaintGrid";
 
 export const metadata: Metadata = {
   title: "Records — South Sanctuary",
@@ -143,25 +144,7 @@ export default function RecordsPage() {
         {/* ── Paint ───────────────────────────────────────────────────────── */}
         <section>
           <SectionHeader label="Paint Selections" />
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {PAINT.map((p) => (
-              <div key={p.name} className="flex flex-col">
-                {/* Swatch */}
-                <div
-                  className="h-28 w-full mb-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
-                  style={{ backgroundColor: p.hex }}
-                />
-                {/* Info */}
-                <p className="text-[9px] tracking-[0.2em] text-ss-taupe uppercase mb-0.5">{p.brand}</p>
-                <p className="text-[13px] text-ss-ink font-medium mb-2">{p.name}</p>
-                <div className="space-y-0.5">
-                  {p.rooms.map((r) => (
-                    <p key={r} className="text-[11px] text-ss-taupe leading-snug">{r}</p>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <PaintGrid paints={PAINT} />
         </section>
 
         {/* ── Blueprints ──────────────────────────────────────────────────── */}
