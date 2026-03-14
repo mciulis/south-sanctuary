@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import {
-  Zap, Car, MapPin, Lightbulb, Leaf, Heart, Package, Wrench, Trees, Sun,
+  Zap, Car, MapPin, Lightbulb, Leaf, Heart, Package, Wrench, Trees, Sun, Waves, Mountain,
 } from "lucide-react";
 import BlueprintGrid from "@/components/records/BlueprintGrid";
 import PaintGrid from "@/components/records/PaintGrid";
@@ -16,6 +16,8 @@ const OVERVIEW = [
   { label: "Neighborhood", value: "John's Landing, Portland" },
   { label: "Built", value: "1984" },
   { label: "Builder", value: "Chapman Homes Inc." },
+  { label: "Stories", value: "2" },
+  { label: "Lot Size", value: "100 × 100 ft (10,000 sf)" },
   { label: "Size", value: "~2,700 sf" },
   { label: "Deck", value: "~800 sf" },
   { label: "Bedrooms / Bathrooms", value: "3 bd / 2.5 ba" },
@@ -97,6 +99,8 @@ const BENEFITS = [
   { icon: Heart, label: "Kind, Friendly Neighbors" },
   { icon: Package, label: "Ample Kitchen, Laundry & Bonus Room Storage" },
   { icon: Wrench, label: "Ample Garage Storage and Workshop" },
+  { icon: Waves, label: "10-Minute Walk to the Waterfront" },
+  { icon: Mountain, label: "Neighborhood Mountain Views" },
 ];
 
 const BLUEPRINTS = [
