@@ -174,16 +174,20 @@ export default function RecordsPage() {
         {/* ── Upgrades ────────────────────────────────────────────────────── */}
         <section>
           <SectionHeader label="Upgrades, Remodels & Refreshes" />
-          <div className="relative">
-            {/* Vertical timeline line */}
-            <div className="absolute left-[88px] top-0 bottom-0 w-px bg-ss-border" />
+          <div>
             {UPGRADES.map((u, i) => (
-              <div key={i} className="relative grid grid-cols-[88px_1fr] gap-6 py-3 items-center">
+              <div key={i} className="flex items-center py-3">
                 {/* Year */}
-                <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums text-right pr-4">{u.year}</span>
-                {/* Dot — absolutely centered on the line */}
-                <div className="absolute left-[88px] top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-ss-border z-10" />
-                <span className="text-sm text-ss-ink pl-3">{u.item}</span>
+                <div className="w-[88px] flex-shrink-0 text-right pr-4">
+                  <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums">{u.year}</span>
+                </div>
+                {/* Line + dot share the same column so they're always perfectly centered */}
+                <div className="relative flex items-center justify-center w-6 flex-shrink-0 self-stretch">
+                  <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ss-border" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-ss-border relative z-10" />
+                </div>
+                {/* Item */}
+                <span className="text-sm text-ss-ink pl-4 flex-1">{u.item}</span>
               </div>
             ))}
           </div>
