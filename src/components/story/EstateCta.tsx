@@ -32,7 +32,7 @@ export default function EstateCta({
             src={backgroundImage}
             alt=""
             fill
-            className="object-cover object-bottom"
+            className="object-cover object-[center_65%]"
             sizes="100vw"
             priority
           />
