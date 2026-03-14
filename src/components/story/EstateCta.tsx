@@ -7,7 +7,7 @@ interface EstateCtaContent {
   button_text?: string;
 }
 
-export default function EstateCta({ content = {} }: { content?: EstateCtaContent }) {
+export default function EstateCta({ content = {}, hideButton = false }: { content?: EstateCtaContent; hideButton?: boolean }) {
   const {
     headline1 = "THE ESTATE SALE",
     headline2 = "Is Now Available",
@@ -35,12 +35,14 @@ export default function EstateCta({ content = {} }: { content?: EstateCtaContent
             {para}
           </p>
         ))}
-        <Link
-          href="/estate-sale"
-          className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
-        >
-          {button_text}
-        </Link>
+        {!hideButton && (
+          <Link
+            href="/estate-sale"
+            className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
+          >
+            {button_text}
+          </Link>
+        )}
       </div>
     </section>
   );
