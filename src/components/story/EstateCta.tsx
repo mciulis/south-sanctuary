@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface EstateCtaContent {
   headline1?: string;
@@ -7,7 +8,15 @@ interface EstateCtaContent {
   button_text?: string;
 }
 
-export default function EstateCta({ content = {}, hideButton = false }: { content?: EstateCtaContent; hideButton?: boolean }) {
+export default function EstateCta({
+  content = {},
+  hideButton = false,
+  backgroundImage,
+}: {
+  content?: EstateCtaContent;
+  hideButton?: boolean;
+  backgroundImage?: string;
+}) {
   const {
     headline1 = "THE ESTATE SALE",
     headline2 = "Is Now Available",
@@ -16,8 +25,21 @@ export default function EstateCta({ content = {}, hideButton = false }: { conten
   } = content;
 
   return (
-    <section className="bg-ss-taupe py-24 md:py-36 px-6">
-      <div className="max-w-2xl mx-auto text-center">
+    <section className="relative bg-ss-taupe py-24 md:py-36 px-6 overflow-hidden">
+      {backgroundImage && (
+        <>
+          <Image
+            src={backgroundImage}
+            alt=""
+            fill
+            className="object-cover object-center"
+            sizes="100vw"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/55" />
+        </>
+      )}
+      <div className="relative max-w-2xl mx-auto text-center">
         <h2
           className="font-display font-light text-white leading-[0.9] mb-2"
           style={{ fontSize: "clamp(42px, 7vw, 88px)" }}
@@ -47,3 +69,4 @@ export default function EstateCta({ content = {}, hideButton = false }: { conten
     </section>
   );
 }
+

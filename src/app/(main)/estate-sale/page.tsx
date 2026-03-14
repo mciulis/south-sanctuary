@@ -36,7 +36,7 @@ export default async function EstateSalePage() {
     <>
       {/* Hero — shares content with homepage estate CTA via Supabase */}
       <div className="pt-20">
-        <EstateCta content={sectionsData?.content} hideButton />
+        <EstateCta content={sectionsData?.content} hideButton backgroundImage="/images/estate-sale-hero.jpg" />
       </div>
 
       {/* Grid */}
