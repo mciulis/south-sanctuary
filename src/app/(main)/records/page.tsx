@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import {
   Zap, Car, MapPin, Leaf, Package, Wrench, Trees, Sun, Waves, Mountain,
-  ShoppingCart, Coffee, SquareParking,
+  ShoppingCart, Coffee, SquareParking, type LucideIcon,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import BlueprintGrid from "@/components/records/BlueprintGrid";
 import PaintGrid from "@/components/records/PaintGrid";
 
@@ -11,99 +12,25 @@ export const metadata: Metadata = {
   description: "Upgrades, paint selections, original blueprints, and notable features of 230 S Canby, Portland.",
 };
 
-// ─── Data ────────────────────────────────────────────────────────────────────
+export const revalidate = 60;
 
-const OVERVIEW = [
-  { label: "Neighborhood", value: "John's Landing, Portland" },
-  { label: "Built", value: "1984" },
-  { label: "Builder", value: "Chapman Homes Inc." },
-  { label: "Stories", value: "2" },
-  { label: "Lot Size", value: "100 × 100 ft (10,000 sf)" },
-  { label: "Size", value: "~2,700 sf" },
-  { label: "Deck", value: "~800 sf" },
-  { label: "Bedrooms / Bathrooms", value: "3 bd / 2.5 ba" },
-  { label: "Garage", value: "2-car attached" },
-];
+// ─── Icon map ─────────────────────────────────────────────────────────────────
 
-const BENEFITS = [
-  { icon: Waves, label: "10 min Walk to Waterfront" },
-  { icon: Mountain, label: "Neighborhood Mountain Views" },
-  { icon: MapPin, label: "Quiet Dead-End Street" },
-  { icon: Trees, label: "Private Backyard" },
-  { icon: Leaf, label: "Minimal Yard Maintenance" },
-  { icon: Car, label: "Two-Car Garage" },
-  { icon: Wrench, label: "Robust Garage Workshop" },
-  { icon: Package, label: "Ample Kitchen, Laundry, Garage Storage" },
-  { icon: SquareParking, label: "Easy Visitor Parking" },
-  { icon: ShoppingCart, label: "Zupans, Fred Meyer within 1 Mile" },
-  { icon: Coffee, label: "Starbucks, Jola within 20 Min Walk" },
-  { icon: Zap, label: "Buried Electrical Lines" },
-  { icon: Sun, label: "Street Lights" },
-];
+const ICON_MAP: Record<string, LucideIcon> = {
+  Car, Coffee, Leaf, MapPin, Mountain, Package,
+  ShoppingCart, SquareParking, Sun, Trees, Waves, Wrench, Zap,
+};
 
-const UPGRADES = [
-  { year: "2026", item: "Complete Deck Refurbish and Repaint" },
-  { year: "2024", item: "Custom-Built Garage Workshop" },
-  { year: "2024", item: "New Electrical Panel" },
-  { year: "2024", item: "New Sump Pump" },
-  { year: "2023", item: "Guest Bath Full Remodel" },
-  { year: "2023", item: "Primary Bath Full Remodel" },
-  { year: "2017", item: "New Paint in All Rooms" },
-  { year: "2017", item: "New Maple Floors" },
-  { year: "2017", item: "New Solid Core Doors" },
-  { year: "2017", item: "New Kitchen Cabinets, Countertops & Appliances" },
-];
+// ─── Static data (paint + blueprints) ────────────────────────────────────────
 
 const PAINT = [
-  {
-    brand: "Benjamin Moore",
-    name: "Simply White",
-    hex: "#F7F4EF",
-    dark: false,
-    rooms: ["Primary Bedroom", "White Walls", "White Ceilings"],
-  },
-  {
-    brand: "Benjamin Moore",
-    name: "Light French Gray",
-    hex: "#C2BDB5",
-    dark: false,
-    rooms: ["Kitchen", "Bonus Room", "Guest Bedrooms"],
-  },
-  {
-    brand: "Benjamin Moore",
-    name: "Whisper",
-    hex: "#E4E0D8",
-    dark: false,
-    rooms: ["Laundry Room", "Primary Bath Ceiling"],
-  },
-  {
-    brand: "Benjamin Moore",
-    name: "Hale Navy",
-    hex: "#233447",
-    dark: true,
-    rooms: ["Bonus Room"],
-  },
-  {
-    brand: "Benjamin Moore",
-    name: "Evening Sky",
-    hex: "#4F6B7A",
-    dark: true,
-    rooms: ["Half Bathroom"],
-  },
-  {
-    brand: "Sherwin Williams",
-    name: "Polite White",
-    hex: "#EDE8DF",
-    dark: false,
-    rooms: ["Secondary Full Bathroom"],
-  },
-  {
-    brand: "Benjamin Moore",
-    name: "Classic Gray",
-    hex: "#C9C5BC",
-    dark: false,
-    rooms: ["Garage"],
-  },
+  { brand: "Benjamin Moore", name: "Simply White", hex: "#F7F4EF", dark: false, rooms: ["Primary Bedroom", "White Walls", "White Ceilings"] },
+  { brand: "Benjamin Moore", name: "Light French Gray", hex: "#C2BDB5", dark: false, rooms: ["Kitchen", "Bonus Room", "Guest Bedrooms"] },
+  { brand: "Benjamin Moore", name: "Whisper", hex: "#E4E0D8", dark: false, rooms: ["Laundry Room", "Primary Bath Ceiling"] },
+  { brand: "Benjamin Moore", name: "Hale Navy", hex: "#233447", dark: true, rooms: ["Bonus Room"] },
+  { brand: "Benjamin Moore", name: "Evening Sky", hex: "#4F6B7A", dark: true, rooms: ["Half Bathroom"] },
+  { brand: "Sherwin Williams", name: "Polite White", hex: "#EDE8DF", dark: false, rooms: ["Secondary Full Bathroom"] },
+  { brand: "Benjamin Moore", name: "Classic Gray", hex: "#C9C5BC", dark: false, rooms: ["Garage"] },
 ];
 
 const BLUEPRINTS = [
@@ -127,7 +54,20 @@ function SectionHeader({ label }: { label: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function RecordsPage() {
+export default async function RecordsPage() {
+  const { data } = await supabase
+    .from("records_content")
+    .select("id, content");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rc: Record<string, any[]> = Object.fromEntries(
+    (data ?? []).map((row) => [row.id, row.content])
+  );
+
+  const overview: { label: string; value: string }[] = rc.overview ?? [];
+  const upgrades: { year: string; item: string }[] = rc.upgrades ?? [];
+  const distinctions: { icon: string; label: string }[] = rc.quiet_distinctions ?? [];
+
   return (
     <div className="bg-ss-cream min-h-screen">
       {/* Page header */}
@@ -149,7 +89,7 @@ export default function RecordsPage() {
         <section>
           <SectionHeader label="Overview" />
           <div className="divide-y divide-ss-border">
-            {OVERVIEW.map((row) => (
+            {overview.map((row) => (
               <div key={row.label} className="grid grid-cols-[200px_1fr] gap-6 py-3.5 items-baseline">
                 <span className="text-[11px] tracking-[0.1em] text-ss-taupe uppercase">{row.label}</span>
                 <span className="text-sm text-ss-ink">{row.value}</span>
@@ -162,12 +102,15 @@ export default function RecordsPage() {
         <section>
           <SectionHeader label="Quiet Distinctions" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-5">
-            {BENEFITS.map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-start gap-3">
-                <Icon size={15} className="text-ss-taupe mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                <span className="text-sm text-ss-ink">{label}</span>
-              </div>
-            ))}
+            {distinctions.map(({ icon, label }) => {
+              const Icon = ICON_MAP[icon] ?? MapPin;
+              return (
+                <div key={label} className="flex items-start gap-3">
+                  <Icon size={15} className="text-ss-taupe mt-0.5 flex-shrink-0" strokeWidth={1.5} />
+                  <span className="text-sm text-ss-ink">{label}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -175,18 +118,15 @@ export default function RecordsPage() {
         <section>
           <SectionHeader label="Upgrades, Remodels & Refreshes" />
           <div>
-            {UPGRADES.map((u, i) => (
+            {upgrades.map((u, i) => (
               <div key={i} className="flex items-center py-3">
-                {/* Year */}
                 <div className="w-[88px] flex-shrink-0 text-right pr-4">
                   <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums">{u.year}</span>
                 </div>
-                {/* Line + dot share the same column so they're always perfectly centered */}
                 <div className="relative flex items-center justify-center w-6 flex-shrink-0 self-stretch">
                   <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-ss-border" />
                   <div className="w-1.5 h-1.5 rounded-full bg-ss-border relative z-10" />
                 </div>
-                {/* Item */}
                 <span className="text-sm text-ss-ink pl-4 flex-1">{u.item}</span>
               </div>
             ))}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import EstateSaleAdmin from "@/components/admin/EstateSaleAdmin";
 import GalleryAdmin from "@/components/admin/GalleryAdmin";
 import HomepageAdmin from "@/components/admin/HomepageAdmin";
+import RecordsAdmin from "@/components/admin/RecordsAdmin";
 
 const PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD!;
 const SESSION_KEY = "ss_admin_auth";
@@ -12,7 +13,7 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
-  const [tab, setTab] = useState<"estate" | "gallery" | "homepage">("homepage");
+  const [tab, setTab] = useState<"estate" | "gallery" | "homepage" | "records">("homepage");
 
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
@@ -66,7 +67,7 @@ export default function AdminPage() {
           South Sanctuary — Admin
         </p>
         <div className="flex gap-1">
-          {(["homepage", "gallery", "estate"] as const).map((t) => (
+          {(["homepage", "gallery", "estate", "records"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -76,7 +77,7 @@ export default function AdminPage() {
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              {t === "estate" ? "Estate Sale" : t === "gallery" ? "Gallery" : "Homepage"}
+              {t === "estate" ? "Estate Sale" : t === "gallery" ? "Gallery" : t === "records" ? "Records" : "Homepage"}
             </button>
           ))}
         </div>
@@ -90,7 +91,7 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="px-6 py-8 max-w-screen-xl mx-auto">
-        {tab === "estate" ? <EstateSaleAdmin /> : tab === "gallery" ? <GalleryAdmin /> : <HomepageAdmin />}
+        {tab === "estate" ? <EstateSaleAdmin /> : tab === "gallery" ? <GalleryAdmin /> : tab === "records" ? <RecordsAdmin /> : <HomepageAdmin />}
       </div>
     </div>
   );
