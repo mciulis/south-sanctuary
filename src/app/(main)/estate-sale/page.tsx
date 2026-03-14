@@ -16,7 +16,7 @@ async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .order("room")
+    .order("brand", { ascending: true, nullsFirst: false })
     .order("name");
 
   if (error) {

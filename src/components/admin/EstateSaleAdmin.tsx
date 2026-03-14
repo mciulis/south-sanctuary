@@ -34,7 +34,7 @@ export default function EstateSaleAdmin() {
     supabase
       .from("products")
       .select("*")
-      .order("room")
+      .order("brand", { ascending: true, nullsFirst: false })
       .order("name")
       .then(({ data }) => {
         setProducts((data as Product[]) ?? []);
@@ -136,7 +136,12 @@ export default function EstateSaleAdmin() {
 
               {/* Name */}
               <div className="min-w-0">
-                <p className="text-[10px] text-gray-400 truncate">{product.full_name.split(" \u2013 ")[0] || ""}</p>
+                <input
+                  value={getVal(product, "brand") ?? ""}
+                  onChange={(e) => edit(product.id, "brand", e.target.value || null)}
+                  placeholder="Brand"
+                  className="w-full text-[10px] text-gray-400 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent focus:outline-none transition-colors truncate"
+                />
                 <p className="text-sm text-gray-800 truncate font-medium">{product.name}</p>
               </div>
 
