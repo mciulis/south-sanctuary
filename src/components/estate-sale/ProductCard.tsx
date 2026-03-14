@@ -18,15 +18,10 @@ function getPhotoUrl(filename: string | null): string | null {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
 }
 
-function extractBrand(fullName: string): string | null {
-  const parts = fullName.split(" \u2013 "); // em dash
-  return parts.length > 1 ? parts[0].trim() : null;
-}
-
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
   const isUnavailable = product.status !== "available" || product.units_available === 0;
-  const brand = extractBrand(product.full_name);
+  const brand = product.brand;
   const availableLabel = formatAvailableBy(product.available_by);
   const hasDiscount =
     product.discount_percent &&

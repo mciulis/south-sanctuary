@@ -13,11 +13,6 @@ function getPhotoUrl(path: string) {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${path}`;
 }
 
-function extractBrand(fullName: string): string | null {
-  const parts = fullName.split(" \u2013 ");
-  return parts.length > 1 ? parts[0].trim() : null;
-}
-
 interface ProductImage {
   id: string;
   filename: string;
@@ -42,7 +37,7 @@ export default function ProductDetail({ product, images }: Props) {
       ? [getPhotoUrl(product.main_photo_filename)]
       : [];
 
-  const brand = extractBrand(product.full_name);
+  const brand = product.brand;
   const condition = conditionLabel[product.condition] || "";
   const availableLabel = (() => {
     if (!product.available_by) return null;

@@ -63,42 +63,78 @@ function SaveBanner({ visible }: { visible: boolean }) {
 
 // ─── Overview ─────────────────────────────────────────────────────────────────
 
+function SortableOverviewRow({ row, onUpdate, onRemove }: {
+  row: OverviewRow & { _id: string };
+  onUpdate: (field: keyof OverviewRow, val: string) => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row._id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  return (
+    <div ref={setNodeRef} style={style} className="flex gap-2 items-center">
+      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical size={14} />
+      </button>
+      <input value={row.label} onChange={(e) => onUpdate("label", e.target.value)} placeholder="Label"
+        className="w-44 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+      <input value={row.value} onChange={(e) => onUpdate("value", e.target.value)} placeholder="Value"
+        className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+      <button onClick={onRemove} className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
+    </div>
+  );
+}
+
 function OverviewSection() {
-  const [rows, setRows] = useState<OverviewRow[]>([]);
+  const [rows, setRows] = useState<(OverviewRow & { _id: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     supabase.from("records_content").select("content").eq("id", "overview").single()
-      .then(({ data }) => { if (data) setRows(data.content as OverviewRow[]); });
+      .then(({ data }) => {
+        if (data) setRows((data.content as OverviewRow[]).map((r, i) => ({ ...r, _id: `ov-${i}-${r.label}` })));
+      });
   }, []);
 
-  function update(i: number, field: keyof OverviewRow, val: string) {
-    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  function update(id: string, field: keyof OverviewRow, val: string) {
+    setRows((prev) => prev.map((r) => r._id === id ? { ...r, [field]: val } : r));
   }
-  function addRow() { setRows((prev) => [...prev, { label: "", value: "" }]); }
-  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
+  function addRow() {
+    const _id = `ov-new-${Date.now()}`;
+    setRows((prev) => [...prev, { label: "", value: "", _id }]);
+  }
+  function removeRow(id: string) { setRows((prev) => prev.filter((r) => r._id !== id)); }
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setRows((prev) => arrayMove(prev, prev.findIndex((r) => r._id === active.id), prev.findIndex((r) => r._id === over.id)));
+    }
+  }
 
   async function save() {
     setSaving(true);
-    await supabase.from("records_content").upsert({ id: "overview", content: rows });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const clean = rows.map(({ _id, ...rest }) => rest);
+    await supabase.from("records_content").upsert({ id: "overview", content: clean });
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <>
       <SectionShell title="Overview" onSave={save} saving={saving}>
-        <div className="space-y-2">
-          {rows.map((row, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <input value={row.label} onChange={(e) => update(i, "label", e.target.value)} placeholder="Label"
-                className="w-44 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
-              <input value={row.value} onChange={(e) => update(i, "value", e.target.value)} placeholder="Value"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={rows.map((r) => r._id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {rows.map((row) => (
+                <SortableOverviewRow key={row._id} row={row}
+                  onUpdate={(field, val) => update(row._id, field, val)}
+                  onRemove={() => removeRow(row._id)} />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
         <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-2">
           <Plus size={13} /> Add row
         </button>
@@ -110,42 +146,78 @@ function OverviewSection() {
 
 // ─── Upgrades ─────────────────────────────────────────────────────────────────
 
+function SortableUpgradeRow({ row, onUpdate, onRemove }: {
+  row: UpgradeRow & { _id: string };
+  onUpdate: (field: keyof UpgradeRow, val: string) => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row._id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  return (
+    <div ref={setNodeRef} style={style} className="flex gap-2 items-center">
+      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical size={14} />
+      </button>
+      <input value={row.year} onChange={(e) => onUpdate("year", e.target.value)} placeholder="Year"
+        className="w-20 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+      <input value={row.item} onChange={(e) => onUpdate("item", e.target.value)} placeholder="Description"
+        className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+      <button onClick={onRemove} className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
+    </div>
+  );
+}
+
 function UpgradesSection() {
-  const [rows, setRows] = useState<UpgradeRow[]>([]);
+  const [rows, setRows] = useState<(UpgradeRow & { _id: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     supabase.from("records_content").select("content").eq("id", "upgrades").single()
-      .then(({ data }) => { if (data) setRows(data.content as UpgradeRow[]); });
+      .then(({ data }) => {
+        if (data) setRows((data.content as UpgradeRow[]).map((r, i) => ({ ...r, _id: `up-${i}-${r.year}` })));
+      });
   }, []);
 
-  function update(i: number, field: keyof UpgradeRow, val: string) {
-    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  function update(id: string, field: keyof UpgradeRow, val: string) {
+    setRows((prev) => prev.map((r) => r._id === id ? { ...r, [field]: val } : r));
   }
-  function addRow() { setRows((prev) => [{ year: new Date().getFullYear().toString(), item: "" }, ...prev]); }
-  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
+  function addRow() {
+    const _id = `up-new-${Date.now()}`;
+    setRows((prev) => [{ year: new Date().getFullYear().toString(), item: "", _id }, ...prev]);
+  }
+  function removeRow(id: string) { setRows((prev) => prev.filter((r) => r._id !== id)); }
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setRows((prev) => arrayMove(prev, prev.findIndex((r) => r._id === active.id), prev.findIndex((r) => r._id === over.id)));
+    }
+  }
 
   async function save() {
     setSaving(true);
-    await supabase.from("records_content").upsert({ id: "upgrades", content: rows });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const clean = rows.map(({ _id, ...rest }) => rest);
+    await supabase.from("records_content").upsert({ id: "upgrades", content: clean });
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <>
       <SectionShell title="Upgrades, Remodels & Refreshes" onSave={save} saving={saving}>
-        <div className="space-y-2">
-          {rows.map((row, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <input value={row.year} onChange={(e) => update(i, "year", e.target.value)} placeholder="Year"
-                className="w-20 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
-              <input value={row.item} onChange={(e) => update(i, "item", e.target.value)} placeholder="Description"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={rows.map((r) => r._id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {rows.map((row) => (
+                <SortableUpgradeRow key={row._id} row={row}
+                  onUpdate={(field, val) => update(row._id, field, val)}
+                  onRemove={() => removeRow(row._id)} />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
         <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-2">
           <Plus size={13} /> Add upgrade
         </button>
@@ -162,44 +234,80 @@ const ICON_OPTIONS = [
   "ShoppingCart", "SquareParking", "Sun", "Trees", "Waves", "Wrench", "Zap",
 ];
 
+function SortableDistinctionRow({ row, onUpdate, onRemove }: {
+  row: DistinctionRow & { _id: string };
+  onUpdate: (field: keyof DistinctionRow, val: string) => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row._id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  return (
+    <div ref={setNodeRef} style={style} className="flex gap-2 items-center">
+      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical size={14} />
+      </button>
+      <select value={row.icon} onChange={(e) => onUpdate("icon", e.target.value)}
+        className="w-36 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white">
+        {ICON_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+      </select>
+      <input value={row.label} onChange={(e) => onUpdate("label", e.target.value)} placeholder="Label"
+        className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+      <button onClick={onRemove} className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"><Trash2 size={14} /></button>
+    </div>
+  );
+}
+
 function DistinctionsSection() {
-  const [rows, setRows] = useState<DistinctionRow[]>([]);
+  const [rows, setRows] = useState<(DistinctionRow & { _id: string })[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   useEffect(() => {
     supabase.from("records_content").select("content").eq("id", "quiet_distinctions").single()
-      .then(({ data }) => { if (data) setRows(data.content as DistinctionRow[]); });
+      .then(({ data }) => {
+        if (data) setRows((data.content as DistinctionRow[]).map((r, i) => ({ ...r, _id: `di-${i}-${r.label}` })));
+      });
   }, []);
 
-  function update(i: number, field: keyof DistinctionRow, val: string) {
-    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
+  function update(id: string, field: keyof DistinctionRow, val: string) {
+    setRows((prev) => prev.map((r) => r._id === id ? { ...r, [field]: val } : r));
   }
-  function addRow() { setRows((prev) => [...prev, { icon: "MapPin", label: "" }]); }
-  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
+  function addRow() {
+    const _id = `di-new-${Date.now()}`;
+    setRows((prev) => [...prev, { icon: "MapPin", label: "", _id }]);
+  }
+  function removeRow(id: string) { setRows((prev) => prev.filter((r) => r._id !== id)); }
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setRows((prev) => arrayMove(prev, prev.findIndex((r) => r._id === active.id), prev.findIndex((r) => r._id === over.id)));
+    }
+  }
 
   async function save() {
     setSaving(true);
-    await supabase.from("records_content").upsert({ id: "quiet_distinctions", content: rows });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const clean = rows.map(({ _id, ...rest }) => rest);
+    await supabase.from("records_content").upsert({ id: "quiet_distinctions", content: clean });
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
     <>
       <SectionShell title="Quiet Distinctions" onSave={save} saving={saving}>
-        <div className="space-y-2">
-          {rows.map((row, i) => (
-            <div key={i} className="flex gap-2 items-center">
-              <select value={row.icon} onChange={(e) => update(i, "icon", e.target.value)}
-                className="w-36 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white">
-                {ICON_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-              <input value={row.label} onChange={(e) => update(i, "label", e.target.value)} placeholder="Label"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={rows.map((r) => r._id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {rows.map((row) => (
+                <SortableDistinctionRow key={row._id} row={row}
+                  onUpdate={(field, val) => update(row._id, field, val)}
+                  onRemove={() => removeRow(row._id)} />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
         <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-2">
           <Plus size={13} /> Add item
         </button>
