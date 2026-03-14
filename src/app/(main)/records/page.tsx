@@ -12,6 +12,16 @@ export const metadata: Metadata = {
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
+const OVERVIEW = [
+  { label: "Neighborhood", value: "John's Landing, Portland" },
+  { label: "Built", value: "1984" },
+  { label: "Builder", value: "Chapman Homes Inc." },
+  { label: "Size", value: "~2,700 sf" },
+  { label: "Deck", value: "~800 sf" },
+  { label: "Bedrooms / Bathrooms", value: "3 bd / 2.5 ba" },
+  { label: "Garage", value: "2-car attached" },
+];
+
 const UPGRADES = [
   { year: "2026", item: "Complete Deck Refurbish and Repaint" },
   { year: "2024", item: "Custom-Built Garage Workshop" },
@@ -128,6 +138,19 @@ export default function RecordsPage() {
 
       <div className="px-6 md:px-16 max-w-5xl mx-auto pb-32 space-y-24">
 
+        {/* ── Overview ────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader label="Overview" />
+          <div className="divide-y divide-ss-border">
+            {OVERVIEW.map((row) => (
+              <div key={row.label} className="grid grid-cols-[200px_1fr] gap-6 py-3.5 items-baseline">
+                <span className="text-[11px] tracking-[0.1em] text-ss-taupe uppercase">{row.label}</span>
+                <span className="text-sm text-ss-ink">{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ── Upgrades ────────────────────────────────────────────────────── */}
         <section>
           <SectionHeader label="Upgrades, Remodels & Refreshes" />
@@ -147,18 +170,9 @@ export default function RecordsPage() {
           <PaintGrid paints={PAINT} />
         </section>
 
-        {/* ── Blueprints ──────────────────────────────────────────────────── */}
+        {/* ── Quiet Distinctions ──────────────────────────────────────────── */}
         <section>
-          <SectionHeader label="Original Blueprints" />
-          <p className="text-[11px] text-ss-taupe tracking-wide mb-8">
-            J.T. Balla Design Service · Chapman Homes Inc. · Permit No. 116221 · 1983
-          </p>
-          <BlueprintGrid blueprints={BLUEPRINTS} />
-        </section>
-
-        {/* ── Unsung Benefits ─────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Unsung Benefits" />
+          <SectionHeader label="Quiet Distinctions" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-5">
             {BENEFITS.map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-start gap-3">
@@ -167,6 +181,15 @@ export default function RecordsPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* ── Blueprints ──────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader label="Original Blueprints" />
+          <p className="text-[11px] text-ss-taupe tracking-wide mb-8">
+            J.T. Balla Design Service · Chapman Homes Inc. · Permit No. 116221 · 1983
+          </p>
+          <BlueprintGrid blueprints={BLUEPRINTS} />
         </section>
 
       </div>
