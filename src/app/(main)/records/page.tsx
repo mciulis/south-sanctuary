@@ -21,25 +21,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   ShoppingCart, SquareParking, Sun, Trees, Waves, Wrench, Zap,
 };
 
-// ─── Static data (paint + blueprints) ────────────────────────────────────────
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
-const PAINT = [
-  { brand: "Benjamin Moore", name: "Simply White", hex: "#F7F4EF", dark: false, rooms: ["Primary Bedroom", "White Walls", "White Ceilings"] },
-  { brand: "Benjamin Moore", name: "Light French Gray", hex: "#C2BDB5", dark: false, rooms: ["Kitchen", "Bonus Room", "Guest Bedrooms"] },
-  { brand: "Benjamin Moore", name: "Whisper", hex: "#E4E0D8", dark: false, rooms: ["Laundry Room", "Primary Bath Ceiling"] },
-  { brand: "Benjamin Moore", name: "Hale Navy", hex: "#233447", dark: true, rooms: ["Bonus Room"] },
-  { brand: "Benjamin Moore", name: "Evening Sky", hex: "#4F6B7A", dark: true, rooms: ["Half Bathroom"] },
-  { brand: "Sherwin Williams", name: "Polite White", hex: "#EDE8DF", dark: false, rooms: ["Secondary Full Bathroom"] },
-  { brand: "Benjamin Moore", name: "Classic Gray", hex: "#C9C5BC", dark: false, rooms: ["Garage"] },
-];
-
-const BLUEPRINTS = [
-  { src: "/images/blueprints/sheet-1-elevations.jpg", caption: "Sheet 1 — Elevations & Roof Framing" },
-  { src: "/images/blueprints/sheet-2-upper-level.jpg", caption: "Sheet 2 — Upper Level Floor Plan" },
-  { src: "/images/blueprints/sheet-3-entry-level.jpg", caption: "Sheet 3 — Entry Level Floor Plan" },
-  { src: "/images/blueprints/sheet-4-foundation.jpg", caption: "Sheet 4 — Foundation Plan & Sections" },
-  { src: "/images/blueprints/building-permit-1983.jpg", caption: "Original Building Permit, 1983" },
-];
+function resolveBlueprintSrc(src: string) {
+  if (src.startsWith("http") || src.startsWith("/")) return src;
+  return `${SUPABASE_URL}/storage/v1/object/public/blueprints/${src}`;
+}
 
 // ─── Layout helpers ───────────────────────────────────────────────────────────
 
@@ -67,6 +54,10 @@ export default async function RecordsPage() {
   const overview: { label: string; value: string }[] = rc.overview ?? [];
   const upgrades: { year: string; item: string }[] = rc.upgrades ?? [];
   const distinctions: { icon: string; label: string }[] = rc.quiet_distinctions ?? [];
+  const paint: { brand: string; name: string; hex: string; dark: boolean; rooms: string[] }[] = rc.paint ?? [];
+  const blueprints: { src: string; caption: string }[] = (rc.blueprints ?? []).map(
+    (b: { src: string; caption: string }) => ({ ...b, src: resolveBlueprintSrc(b.src) })
+  );
 
   return (
     <div className="bg-ss-cream min-h-screen">
@@ -136,7 +127,7 @@ export default async function RecordsPage() {
         {/* ── Paint ───────────────────────────────────────────────────────── */}
         <section>
           <SectionHeader label="Paint Selections" />
-          <PaintGrid paints={PAINT} />
+          <PaintGrid paints={paint} />
         </section>
 
         {/* ── Blueprints ──────────────────────────────────────────────────── */}
@@ -145,7 +136,7 @@ export default async function RecordsPage() {
           <p className="text-[11px] text-ss-taupe tracking-wide mb-8">
             J.T. Balla Design Service · Chapman Homes Inc. · Permit No. 116221 · 1983
           </p>
-          <BlueprintGrid blueprints={BLUEPRINTS} />
+          <BlueprintGrid blueprints={blueprints} />
         </section>
 
       </div>

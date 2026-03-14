@@ -1,14 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Plus, Trash2, GripVertical } from "lucide-react";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, useSortable, verticalListSortingStrategy,
+  rectSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+function blueprintUrl(src: string) {
+  if (src.startsWith("http") || src.startsWith("/")) return src;
+  return `${SUPABASE_URL}/storage/v1/object/public/blueprints/${src}`;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface OverviewRow { label: string; value: string; }
 interface UpgradeRow { year: string; item: string; }
 interface DistinctionRow { icon: string; label: string; }
+interface BlueprintRow { src: string; caption: string; }
+interface PaintRow { brand: string; name: string; hex: string; dark: boolean; rooms: string[]; }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -59,21 +76,13 @@ function OverviewSection() {
   function update(i: number, field: keyof OverviewRow, val: string) {
     setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
   }
-
-  function addRow() {
-    setRows((prev) => [...prev, { label: "", value: "" }]);
-  }
-
-  function removeRow(i: number) {
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
-  }
+  function addRow() { setRows((prev) => [...prev, { label: "", value: "" }]); }
+  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
 
   async function save() {
     setSaving(true);
     await supabase.from("records_content").upsert({ id: "overview", content: rows });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
@@ -82,21 +91,11 @@ function OverviewSection() {
         <div className="space-y-2">
           {rows.map((row, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <input
-                value={row.label}
-                onChange={(e) => update(i, "label", e.target.value)}
-                placeholder="Label"
-                className="w-44 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
-              />
-              <input
-                value={row.value}
-                onChange={(e) => update(i, "value", e.target.value)}
-                placeholder="Value"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
-              />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors">
-                <Trash2 size={14} />
-              </button>
+              <input value={row.label} onChange={(e) => update(i, "label", e.target.value)} placeholder="Label"
+                className="w-44 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+              <input value={row.value} onChange={(e) => update(i, "value", e.target.value)} placeholder="Value"
+                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
             </div>
           ))}
         </div>
@@ -124,21 +123,13 @@ function UpgradesSection() {
   function update(i: number, field: keyof UpgradeRow, val: string) {
     setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
   }
-
-  function addRow() {
-    setRows((prev) => [{ year: new Date().getFullYear().toString(), item: "" }, ...prev]);
-  }
-
-  function removeRow(i: number) {
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
-  }
+  function addRow() { setRows((prev) => [{ year: new Date().getFullYear().toString(), item: "" }, ...prev]); }
+  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
 
   async function save() {
     setSaving(true);
     await supabase.from("records_content").upsert({ id: "upgrades", content: rows });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
@@ -147,21 +138,11 @@ function UpgradesSection() {
         <div className="space-y-2">
           {rows.map((row, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <input
-                value={row.year}
-                onChange={(e) => update(i, "year", e.target.value)}
-                placeholder="Year"
-                className="w-20 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
-              />
-              <input
-                value={row.item}
-                onChange={(e) => update(i, "item", e.target.value)}
-                placeholder="Description"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
-              />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors">
-                <Trash2 size={14} />
-              </button>
+              <input value={row.year} onChange={(e) => update(i, "year", e.target.value)} placeholder="Year"
+                className="w-20 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+              <input value={row.item} onChange={(e) => update(i, "item", e.target.value)} placeholder="Description"
+                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
             </div>
           ))}
         </div>
@@ -194,21 +175,13 @@ function DistinctionsSection() {
   function update(i: number, field: keyof DistinctionRow, val: string) {
     setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, [field]: val } : r));
   }
-
-  function addRow() {
-    setRows((prev) => [...prev, { icon: "MapPin", label: "" }]);
-  }
-
-  function removeRow(i: number) {
-    setRows((prev) => prev.filter((_, idx) => idx !== i));
-  }
+  function addRow() { setRows((prev) => [...prev, { icon: "MapPin", label: "" }]); }
+  function removeRow(i: number) { setRows((prev) => prev.filter((_, idx) => idx !== i)); }
 
   async function save() {
     setSaving(true);
     await supabase.from("records_content").upsert({ id: "quiet_distinctions", content: rows });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   }
 
   return (
@@ -217,30 +190,222 @@ function DistinctionsSection() {
         <div className="space-y-2">
           {rows.map((row, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <select
-                value={row.icon}
-                onChange={(e) => update(i, "icon", e.target.value)}
-                className="w-36 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white"
-              >
-                {ICON_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
+              <select value={row.icon} onChange={(e) => update(i, "icon", e.target.value)}
+                className="w-36 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white">
+                {ICON_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
               </select>
-              <input
-                value={row.label}
-                onChange={(e) => update(i, "label", e.target.value)}
-                placeholder="Label"
-                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
-              />
-              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors">
-                <Trash2 size={14} />
-              </button>
+              <input value={row.label} onChange={(e) => update(i, "label", e.target.value)} placeholder="Label"
+                className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
+              <button onClick={() => removeRow(i)} className="text-gray-300 hover:text-red-400 transition-colors"><Trash2 size={14} /></button>
             </div>
           ))}
         </div>
         <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mt-2">
           <Plus size={13} /> Add item
         </button>
+      </SectionShell>
+      <SaveBanner visible={saved} />
+    </>
+  );
+}
+
+// ─── Paint (reorder only) ─────────────────────────────────────────────────────
+
+interface SortablePaintItemProps { paint: PaintRow & { _id: string }; }
+
+function SortablePaintItem({ paint }: SortablePaintItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: paint._id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 bg-white border border-gray-200 rounded px-3 py-2">
+      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing">
+        <GripVertical size={14} />
+      </button>
+      <div className="w-8 h-8 rounded flex-shrink-0 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]" style={{ backgroundColor: paint.hex }} />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-gray-700 truncate">{paint.name}</p>
+        <p className="text-[11px] text-gray-400 truncate">{paint.brand}</p>
+      </div>
+      <p className="text-[11px] text-gray-400 truncate max-w-[140px]">{paint.rooms.join(", ")}</p>
+    </div>
+  );
+}
+
+function PaintSection() {
+  const [paints, setPaints] = useState<(PaintRow & { _id: string })[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  useEffect(() => {
+    supabase.from("records_content").select("content").eq("id", "paint").single()
+      .then(({ data }) => {
+        if (data) setPaints((data.content as PaintRow[]).map((p, i) => ({ ...p, _id: `${p.name}-${i}` })));
+      });
+  }, []);
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setPaints((prev) => {
+        const oldIdx = prev.findIndex((p) => p._id === active.id);
+        const newIdx = prev.findIndex((p) => p._id === over.id);
+        return arrayMove(prev, oldIdx, newIdx);
+      });
+    }
+  }
+
+  async function save() {
+    setSaving(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const clean = paints.map(({ _id, ...rest }) => rest);
+    await supabase.from("records_content").upsert({ id: "paint", content: clean });
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <>
+      <SectionShell title="Paint Selections — Reorder" onSave={save} saving={saving}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={paints.map((p) => p._id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {paints.map((p) => <SortablePaintItem key={p._id} paint={p} />)}
+            </div>
+          </SortableContext>
+        </DndContext>
+        <p className="text-[11px] text-gray-400 mt-3">Drag to reorder. Save to apply.</p>
+      </SectionShell>
+      <SaveBanner visible={saved} />
+    </>
+  );
+}
+
+// ─── Blueprints (upload / delete / reorder) ───────────────────────────────────
+
+interface SortableBlueprintProps {
+  blueprint: BlueprintRow & { _id: string };
+  onDelete: () => void;
+  onCaptionChange: (val: string) => void;
+}
+
+function SortableBlueprint({ blueprint, onDelete, onCaptionChange }: SortableBlueprintProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: blueprint._id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 };
+  const url = blueprintUrl(blueprint.src);
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 bg-white border border-gray-200 rounded px-3 py-2">
+      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical size={14} />
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="" className="w-20 h-14 object-cover bg-gray-100 flex-shrink-0 rounded" />
+      <input
+        value={blueprint.caption}
+        onChange={(e) => onCaptionChange(e.target.value)}
+        placeholder="Caption"
+        className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded"
+      />
+      <button onClick={onDelete} className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+        <Trash2 size={14} />
+      </button>
+    </div>
+  );
+}
+
+function BlueprintsSection() {
+  const [blueprints, setBlueprints] = useState<(BlueprintRow & { _id: string })[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  useEffect(() => {
+    supabase.from("records_content").select("content").eq("id", "blueprints").single()
+      .then(({ data }) => {
+        if (data) setBlueprints((data.content as BlueprintRow[]).map((b, i) => ({ ...b, _id: `bp-${i}-${b.src}` })));
+      });
+  }, []);
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setBlueprints((prev) => {
+        const oldIdx = prev.findIndex((b) => b._id === active.id);
+        const newIdx = prev.findIndex((b) => b._id === over.id);
+        return arrayMove(prev, oldIdx, newIdx);
+      });
+    }
+  }
+
+  function updateCaption(i: number, val: string) {
+    setBlueprints((prev) => prev.map((b, idx) => idx === i ? { ...b, caption: val } : b));
+  }
+
+  async function handleUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("blueprints").upload(path, file, { contentType: file.type });
+      if (!error) {
+        const newItem = { src: path, caption: file.name.replace(/\.[^.]+$/, ""), _id: `bp-new-${path}` };
+        setBlueprints((prev) => [...prev, newItem]);
+      }
+    }
+    setUploading(false);
+  }
+
+  async function deleteBlueprint(i: number) {
+    const bp = blueprints[i];
+    // Only delete from storage if it's a Supabase key (not a static path)
+    if (!bp.src.startsWith("/") && !bp.src.startsWith("http")) {
+      await supabase.storage.from("blueprints").remove([bp.src]);
+    }
+    setBlueprints((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  async function save() {
+    setSaving(true);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const clean = blueprints.map(({ _id, ...rest }) => rest);
+    await supabase.from("records_content").upsert({ id: "blueprints", content: clean });
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <>
+      <SectionShell title="Original Blueprints" onSave={save} saving={saving}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={blueprints.map((b) => b._id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {blueprints.map((bp, i) => (
+                <SortableBlueprint
+                  key={bp._id}
+                  blueprint={bp}
+                  onDelete={() => deleteBlueprint(i)}
+                  onCaptionChange={(val) => updateCaption(i, val)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+
+        <div className="mt-3">
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleUpload(e.target.files)} />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-40"
+          >
+            <Plus size={13} /> {uploading ? "Uploading…" : "Upload blueprint"}
+          </button>
+        </div>
       </SectionShell>
       <SaveBanner visible={saved} />
     </>
@@ -255,6 +420,8 @@ export default function RecordsAdmin() {
       <OverviewSection />
       <DistinctionsSection />
       <UpgradesSection />
+      <PaintSection />
+      <BlueprintsSection />
     </div>
   );
 }
