@@ -179,11 +179,10 @@ export default function RecordsPage() {
             <div className="absolute left-[88px] top-0 bottom-0 w-px bg-ss-border" />
             {UPGRADES.map((u, i) => (
               <div key={i} className="relative grid grid-cols-[88px_1fr] gap-6 py-3 items-center">
-                {/* Year + dot */}
-                <div className="flex items-center justify-end gap-3 pr-0">
-                  <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums">{u.year}</span>
-                  <div className="w-1.5 h-1.5 rounded-full bg-ss-border flex-shrink-0 relative z-10" />
-                </div>
+                {/* Year */}
+                <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums text-right pr-4">{u.year}</span>
+                {/* Dot — absolutely centered on the line */}
+                <div className="absolute left-[88px] top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-ss-border z-10" />
                 <span className="text-sm text-ss-ink pl-3">{u.item}</span>
               </div>
             ))}
