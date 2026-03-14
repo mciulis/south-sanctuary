@@ -17,6 +17,7 @@ const NAV_LINKS = [
 export default function Nav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const isHome = pathname === "/";
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function Nav() {
       </nav>
 
       {/* Mobile nav */}
-      <Sheet>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetTrigger
           className={`md:hidden transition-colors duration-300 ${solid ? "text-ss-ink" : "text-white/80"}`}
           aria-label="Open menu"
@@ -81,6 +82,7 @@ export default function Nav() {
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={() => setMobileOpen(false)}
                 className="text-[11px] tracking-[0.22em] text-ss-ink uppercase hover:text-ss-taupe transition-colors"
               >
                 {link.label}
