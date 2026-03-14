@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import {
-  Zap, Car, MapPin, Lightbulb, Leaf, Heart, Package, Wrench, Trees, Sun, Waves, Mountain,
+  Zap, Car, MapPin, Leaf, Package, Wrench, Trees, Sun, Waves, Mountain,
+  ShoppingCart, Coffee, SquareParking,
 } from "lucide-react";
 import BlueprintGrid from "@/components/records/BlueprintGrid";
 import PaintGrid from "@/components/records/PaintGrid";
@@ -22,6 +23,22 @@ const OVERVIEW = [
   { label: "Deck", value: "~800 sf" },
   { label: "Bedrooms / Bathrooms", value: "3 bd / 2.5 ba" },
   { label: "Garage", value: "2-car attached" },
+];
+
+const BENEFITS = [
+  { icon: Waves, label: "10 min Walk to Waterfront" },
+  { icon: Mountain, label: "Neighborhood Mountain Views" },
+  { icon: MapPin, label: "Quiet Dead-End Street" },
+  { icon: Trees, label: "Private Backyard" },
+  { icon: Leaf, label: "Minimal Yard Maintenance" },
+  { icon: Car, label: "Two-Car Garage" },
+  { icon: Wrench, label: "Robust Garage Workshop" },
+  { icon: Package, label: "Ample Kitchen, Laundry, Garage Storage" },
+  { icon: SquareParking, label: "Easy Visitor Parking" },
+  { icon: ShoppingCart, label: "Zupans, Fred Meyer within 1 Mile" },
+  { icon: Coffee, label: "Starbucks, Jola within 20 Min Walk" },
+  { icon: Zap, label: "Buried Electrical Lines" },
+  { icon: Sun, label: "Street Lights" },
 ];
 
 const UPGRADES = [
@@ -89,20 +106,6 @@ const PAINT = [
   },
 ];
 
-const BENEFITS = [
-  { icon: Car, label: "Two-Car Garage" },
-  { icon: MapPin, label: "Quiet Dead-End Street" },
-  { icon: Zap, label: "Buried Electrical Lines" },
-  { icon: Sun, label: "Street Lights" },
-  { icon: Trees, label: "Private Backyard" },
-  { icon: Leaf, label: "Minimal Yard Maintenance" },
-  { icon: Heart, label: "Kind, Friendly Neighbors" },
-  { icon: Package, label: "Ample Kitchen, Laundry & Bonus Room Storage" },
-  { icon: Wrench, label: "Ample Garage Storage and Workshop" },
-  { icon: Waves, label: "10-Minute Walk to the Waterfront" },
-  { icon: Mountain, label: "Neighborhood Mountain Views" },
-];
-
 const BLUEPRINTS = [
   { src: "/images/blueprints/sheet-1-elevations.jpg", caption: "Sheet 1 — Elevations & Roof Framing" },
   { src: "/images/blueprints/sheet-2-upper-level.jpg", caption: "Sheet 2 — Upper Level Floor Plan" },
@@ -155,25 +158,6 @@ export default function RecordsPage() {
           </div>
         </section>
 
-        {/* ── Upgrades ────────────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Upgrades, Remodels & Refreshes" />
-          <div className="divide-y divide-ss-border">
-            {UPGRADES.map((u, i) => (
-              <div key={i} className="grid grid-cols-[72px_1fr] gap-6 py-3.5 items-baseline">
-                <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums">{u.year}</span>
-                <span className="text-sm text-ss-ink">{u.item}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Paint ───────────────────────────────────────────────────────── */}
-        <section>
-          <SectionHeader label="Paint Selections" />
-          <PaintGrid paints={PAINT} />
-        </section>
-
         {/* ── Quiet Distinctions ──────────────────────────────────────────── */}
         <section>
           <SectionHeader label="Quiet Distinctions" />
@@ -185,6 +169,31 @@ export default function RecordsPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* ── Upgrades ────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader label="Upgrades, Remodels & Refreshes" />
+          <div className="relative">
+            {/* Vertical timeline line */}
+            <div className="absolute left-[88px] top-0 bottom-0 w-px bg-ss-border" />
+            {UPGRADES.map((u, i) => (
+              <div key={i} className="relative grid grid-cols-[88px_1fr] gap-6 py-3 items-center">
+                {/* Year + dot */}
+                <div className="flex items-center justify-end gap-3 pr-0">
+                  <span className="text-[11px] tracking-[0.1em] text-ss-taupe tabular-nums">{u.year}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-ss-border flex-shrink-0 relative z-10" />
+                </div>
+                <span className="text-sm text-ss-ink pl-3">{u.item}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Paint ───────────────────────────────────────────────────────── */}
+        <section>
+          <SectionHeader label="Paint Selections" />
+          <PaintGrid paints={PAINT} />
         </section>
 
         {/* ── Blueprints ──────────────────────────────────────────────────── */}
