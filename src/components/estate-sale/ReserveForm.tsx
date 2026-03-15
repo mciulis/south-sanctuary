@@ -44,12 +44,26 @@ export default function ReserveForm({
       status: "pending",
     });
 
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       setError("Something went wrong. Please try again.");
-    } else {
-      onSuccess();
+      return;
     }
+
+    await fetch("/api/notify-reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productName,
+        buyerName: form.buyer_name,
+        buyerEmail: form.buyer_email,
+        buyerPhone: form.buyer_phone || null,
+        message: form.message || null,
+      }),
+    });
+
+    setSubmitting(false);
+    onSuccess();
   }
 
   return (
