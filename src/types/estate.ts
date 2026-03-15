@@ -6,8 +6,8 @@ export interface Product {
   description: string | null;
   sale_price: number | null;
   retail_price: number | null;
-  discount_percent: string | null;
-  condition: "like_new" | "light_wear" | "heavy_wear" | "damaged" | "na";
+  discount_percent: number | null; // Override discount (0–100). Null = use formula based on condition.
+  condition: "new" | "used_like_new" | "used_good" | "used_fair" | "damaged";
   room: string | null;
   length_in: number | null;
   width_in: number | null;
@@ -22,9 +22,18 @@ export interface Product {
 }
 
 export const conditionLabel: Record<string, string> = {
-  like_new: "Like New",
-  light_wear: "Light Wear",
-  heavy_wear: "Heavy Wear",
+  new: "New",
+  used_like_new: "Used – Like New",
+  used_good: "Used – Good",
+  used_fair: "Used – Fair",
   damaged: "Damaged",
-  na: "",
+};
+
+// Default discount % by condition. Used when discount_percent is null on the product.
+export const CONDITION_DISCOUNTS: Record<string, number> = {
+  new: 35,
+  used_like_new: 45,
+  used_good: 55,
+  used_fair: 70,
+  damaged: 90,
 };

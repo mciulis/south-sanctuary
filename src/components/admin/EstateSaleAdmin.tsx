@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Product, conditionLabel } from "@/types/estate";
+import { Product, conditionLabel, CONDITION_DISCOUNTS } from "@/types/estate";
 import ProductPhotoModal from "./ProductPhotoModal";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -12,7 +12,7 @@ function thumb(filename: string | null) {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
 }
 
-const CONDITIONS = ["like_new", "light_wear", "heavy_wear", "damaged", "na"] as const;
+const CONDITIONS = ["new", "used_like_new", "used_good", "used_fair", "damaged"] as const;
 const STATUSES = ["available", "reserved", "sold"] as const;
 
 const statusColor: Record<string, string> = {
@@ -43,7 +43,21 @@ export default function EstateSaleAdmin() {
   }, []);
 
   function edit(id: number, field: keyof Product, value: unknown) {
-    setEdits((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+    setEdits((prev) => {
+      const product = products.find((p) => p.id === id)!;
+      const next: Partial<Product> = { ...(prev[id] ?? {}), [field]: value as Product[typeof field] };
+
+      // Auto-compute sale_price when any pricing input changes
+      if (["retail_price", "condition", "discount_percent"].includes(field)) {
+        const retail = ("retail_price" in next ? next.retail_price : product.retail_price) as number | null;
+        const condition = ("condition" in next ? next.condition : product.condition) as string;
+        const override = ("discount_percent" in next ? next.discount_percent : product.discount_percent) as number | null;
+        const pct = override ?? CONDITION_DISCOUNTS[condition] ?? 0;
+        next.sale_price = retail != null ? Math.round(retail * (1 - pct / 100)) : null;
+      }
+
+      return { ...prev, [id]: next };
+    });
   }
 
   function getVal<K extends keyof Product>(product: Product, field: K): Product[K] {
@@ -98,11 +112,11 @@ export default function EstateSaleAdmin() {
 
       <div className="bg-white border border-gray-200 rounded overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[48px_2fr_1fr_120px_140px_130px_110px_80px_80px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
+        <div className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
           <span></span>
           <span>Item</span>
           <span>Room</span>
-          <span>Price</span>
+          <span>Pricing</span>
           <span>Condition</span>
           <span>Available By</span>
           <span>Status</span>
@@ -113,10 +127,19 @@ export default function EstateSaleAdmin() {
         {/* Rows */}
         {filtered.map((product) => {
           const dirty = isDirty(product);
+          const currentEdits = edits[product.id] ?? {};
+          const isOverride = "discount_percent" in currentEdits
+            ? currentEdits.discount_percent != null
+            : product.discount_percent != null;
+          const overrideVal = "discount_percent" in currentEdits
+            ? currentEdits.discount_percent
+            : product.discount_percent;
+          const formulaDiscount = CONDITION_DISCOUNTS[getVal(product, "condition")] ?? 0;
+
           return (
             <div
               key={product.id}
-              className="grid grid-cols-[48px_2fr_1fr_120px_140px_130px_110px_80px_80px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
+              className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
             >
               {/* Thumbnail */}
               <div className="w-10 h-10 bg-gray-100 overflow-hidden flex-shrink-0">
@@ -148,15 +171,58 @@ export default function EstateSaleAdmin() {
               {/* Room */}
               <p className="text-xs text-gray-500 truncate">{product.room ?? "—"}</p>
 
-              {/* Price */}
-              <div className="flex items-center gap-1">
-                <span className="text-gray-400 text-xs">$</span>
-                <input
-                  type="number"
-                  value={getVal(product, "sale_price") ?? ""}
-                  onChange={(e) => edit(product.id, "sale_price", e.target.value ? parseFloat(e.target.value) : null)}
-                  className="w-20 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent py-0.5 text-sm focus:outline-none transition-colors"
-                />
+              {/* Pricing */}
+              <div className="space-y-1">
+                {/* Retail */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400 w-9 shrink-0">Retail</span>
+                  <span className="text-[10px] text-gray-400">$</span>
+                  <input
+                    type="number"
+                    value={getVal(product, "retail_price") ?? ""}
+                    onChange={(e) => edit(product.id, "retail_price", e.target.value ? parseFloat(e.target.value) : null)}
+                    className="w-16 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent py-0.5 text-xs focus:outline-none transition-colors"
+                  />
+                </div>
+
+                {/* Discount */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400 w-9 shrink-0">Disc.</span>
+                  {isOverride ? (
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="number"
+                        value={overrideVal ?? ""}
+                        onChange={(e) => edit(product.id, "discount_percent", e.target.value ? parseFloat(e.target.value) : null)}
+                        className="w-10 border-b border-amber-400 focus:border-amber-600 bg-transparent py-0.5 text-xs focus:outline-none"
+                      />
+                      <span className="text-[10px] text-gray-400">%</span>
+                      <button
+                        onClick={() => edit(product.id, "discount_percent", null)}
+                        className="text-[10px] text-gray-400 hover:text-gray-700 ml-0.5"
+                        title="Clear override, use formula"
+                      >✕</button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-gray-400">{formulaDiscount}%</span>
+                      <button
+                        onClick={() => edit(product.id, "discount_percent", formulaDiscount)}
+                        className="text-[10px] text-blue-500 hover:text-blue-700"
+                      >override</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sale (computed) */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400 w-9 shrink-0">Sale</span>
+                  <span className="text-xs font-medium text-gray-800">
+                    {getVal(product, "sale_price") != null
+                      ? `$${getVal(product, "sale_price")?.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                      : "—"}
+                  </span>
+                </div>
               </div>
 
               {/* Condition */}
@@ -167,7 +233,7 @@ export default function EstateSaleAdmin() {
               >
                 {CONDITIONS.map((c) => (
                   <option key={c} value={c}>
-                    {conditionLabel[c] || "N/A"}
+                    {conditionLabel[c]}
                   </option>
                 ))}
               </select>

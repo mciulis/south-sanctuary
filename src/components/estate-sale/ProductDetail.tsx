@@ -49,10 +49,11 @@ export default function ProductDetail({ product, images }: Props) {
   })();
   const isUnavailable =
     reserved || product.status !== "available" || product.units_available === 0;
-  const hasDiscount =
-    product.discount_percent &&
-    product.discount_percent !== "0%" &&
-    product.discount_percent !== "-10%";
+  const effectiveDiscountPct =
+    product.retail_price && product.sale_price && product.retail_price > product.sale_price
+      ? Math.round((1 - product.sale_price / product.retail_price) * 100)
+      : null;
+  const hasDiscount = effectiveDiscountPct != null && effectiveDiscountPct > 0;
 
   return (
     <>
@@ -135,7 +136,7 @@ export default function ProductDetail({ product, images }: Props) {
                   <span className="text-sm text-ss-taupe/60 line-through">
                     ${product.retail_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
-                  <span className="text-sm text-ss-taupe">{product.discount_percent} off retail</span>
+                  <span className="text-sm text-ss-taupe">{effectiveDiscountPct}% off retail</span>
                 </>
               )}
             </div>
@@ -191,7 +192,15 @@ export default function ProductDetail({ product, images }: Props) {
                   rel="noopener noreferrer"
                   className="text-[10px] tracking-[0.2em] text-ss-taupe uppercase underline underline-offset-4 hover:text-ss-ink transition-colors"
                 >
-                  See original listing ↗
+                  {(() => {
+                    try {
+                      const host = new URL(product.retail_url).hostname.replace(/^www\./, "");
+                      const label = host.charAt(0).toUpperCase() + host.slice(1);
+                      return `Buy new on ${label} ↗`;
+                    } catch {
+                      return "Buy new ↗";
+                    }
+                  })()}
                 </a>
               </div>
             )}

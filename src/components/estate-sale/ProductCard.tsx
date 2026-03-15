@@ -23,10 +23,11 @@ export default function ProductCard({ product }: { product: Product }) {
   const isUnavailable = product.status !== "available" || product.units_available === 0;
   const brand = product.brand;
   const availableLabel = formatAvailableBy(product.available_by);
-  const hasDiscount =
-    product.discount_percent &&
-    product.discount_percent !== "0%" &&
-    product.discount_percent !== "-10%";
+  const effectiveDiscountPct =
+    product.retail_price && product.sale_price && product.retail_price > product.sale_price
+      ? Math.round((1 - product.sale_price / product.retail_price) * 100)
+      : null;
+  const hasDiscount = effectiveDiscountPct != null && effectiveDiscountPct > 0;
 
   return (
     <Link href={`/estate-sale/${product.id}`} className="group block">
@@ -85,7 +86,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 ${product.retail_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
               <p className="text-[10px] text-ss-taupe">
-                {product.discount_percent} off
+                {effectiveDiscountPct}% off
               </p>
             </>
           )}
