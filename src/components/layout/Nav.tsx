@@ -21,10 +21,11 @@ export default function Nav() {
   const isHome = pathname === "/";
 
   useEffect(() => {
+    setScrolled(window.scrollY > 60);
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [pathname]);
 
   // On the home page: transparent until scrolled. Everywhere else: always solid.
   const solid = !isHome || scrolled;
