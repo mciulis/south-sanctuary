@@ -18,6 +18,10 @@ function getPhotoUrl(filename: string | null): string | null {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
 }
 
+function roundToNearest5(n: number) {
+  return Math.round(n / 5) * 5;
+}
+
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
   const isUnavailable = product.status !== "available" || product.units_available === 0;
@@ -57,10 +61,10 @@ export default function ProductCard({ product }: { product: Product }) {
             </span>
           </div>
         )}
-        {product.units > 1 && (
+        {!isUnavailable && product.units_available > 1 && (
           <div className="absolute top-3 right-3">
             <span className="text-[9px] tracking-[0.2em] uppercase bg-white/90 text-ss-ink px-2 py-1">
-              Set of {product.units}
+              {product.units_available} available
             </span>
           </div>
         )}
@@ -77,7 +81,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <div className="flex items-baseline gap-2 flex-wrap">
           <p className="text-[12px] text-ss-ink font-medium">
             {product.sale_price != null
-              ? `$${product.sale_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+              ? `$${roundToNearest5(product.sale_price).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
               : "Make an offer"}
           </p>
           {product.retail_price != null && hasDiscount && (

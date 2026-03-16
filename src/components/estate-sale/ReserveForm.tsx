@@ -6,13 +6,17 @@ import { supabase } from "@/lib/supabase";
 interface Props {
   productId: number;
   productName: string;
-  onSuccess: () => void;
+  quantity: number;
+  unitsAvailable: number;
+  onSuccess: (unitsReserved: number) => void;
   onCancel: () => void;
 }
 
 export default function ReserveForm({
   productId,
   productName,
+  quantity,
+  unitsAvailable,
   onSuccess,
   onCancel,
 }: Props) {
@@ -41,6 +45,7 @@ export default function ReserveForm({
       buyer_email: form.buyer_email,
       buyer_phone: form.buyer_phone || null,
       message: form.message || null,
+      units_requested: quantity,
       status: "pending",
     });
 
@@ -50,17 +55,18 @@ export default function ReserveForm({
       return;
     }
 
-    // Auto-mark the product as reserved
-    await supabase
-      .from("products")
-      .update({ status: "reserved" })
-      .eq("id", productId);
+    // Decrement units_available; mark reserved only if none remain
+    const remaining = unitsAvailable - quantity;
+    const productUpdate: Record<string, unknown> = { units_available: remaining };
+    if (remaining <= 0) productUpdate.status = "reserved";
+    await supabase.from("products").update(productUpdate).eq("id", productId);
 
     await fetch("/api/notify-reservation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         productName,
+        unitsRequested: quantity,
         buyerName: form.buyer_name,
         buyerEmail: form.buyer_email,
         buyerPhone: form.buyer_phone || null,
@@ -69,7 +75,7 @@ export default function ReserveForm({
     });
 
     setSubmitting(false);
-    onSuccess();
+    onSuccess(quantity);
   }
 
   return (
@@ -89,7 +95,14 @@ export default function ReserveForm({
           Submit your details and I&apos;ll be in touch within 24 hours to
           arrange payment via PayPal or Venmo and coordinate pickup.
         </p>
-        <p className="text-xs text-ss-taupe mb-8 italic">{productName}</p>
+        <p className="text-xs text-ss-taupe italic">
+          {productName}{quantity > 1 ? ` — ${quantity} units` : ""}
+        </p>
+        <p className="text-[10px] tracking-[0.18em] text-ss-taupe/60 uppercase mt-1 mb-8">
+          {unitsAvailable - quantity > 0
+            ? `${unitsAvailable - quantity} of ${unitsAvailable} remaining after this reservation`
+            : "This will reserve the last available unit"}
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>

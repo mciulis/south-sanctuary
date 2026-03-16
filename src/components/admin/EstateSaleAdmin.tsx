@@ -21,6 +21,16 @@ const statusColor: Record<string, string> = {
   sold: "bg-gray-200 text-gray-500",
 };
 
+const BLANK_NEW_PRODUCT = {
+  name: "",
+  full_name: "",
+  brand: "",
+  units: 1,
+  retail_price: "",
+  condition: "new" as const,
+  available_by: "",
+};
+
 export default function EstateSaleAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +39,12 @@ export default function EstateSaleAdmin() {
   const [saved, setSaved] = useState<Record<number, boolean>>({});
   const [photoModal, setPhotoModal] = useState<Product | null>(null);
   const [filter, setFilter] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newProduct, setNewProduct] = useState({ ...BLANK_NEW_PRODUCT });
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   useEffect(() => {
     supabase
@@ -84,6 +100,51 @@ export default function EstateSaleAdmin() {
     setTimeout(() => setSaved((p) => ({ ...p, [product.id]: false })), 2000);
   }
 
+  async function addProduct() {
+    if (!newProduct.name.trim()) return;
+    setAdding(true);
+    setAddError(null);
+
+    const retail = newProduct.retail_price ? parseFloat(newProduct.retail_price as string) : null;
+    const pct = CONDITION_DISCOUNTS[newProduct.condition] ?? 0;
+    const sale_price = retail != null ? Math.round(retail * (1 - pct / 100)) : null;
+    const units = Number(newProduct.units) || 1;
+
+    const { data, error } = await supabase.from("products").insert({
+      name: newProduct.name.trim(),
+      full_name: newProduct.full_name.trim() || newProduct.name.trim(),
+      brand: newProduct.brand.trim() || null,
+      units,
+      units_available: units,
+      retail_price: retail,
+      sale_price,
+      condition: newProduct.condition,
+      available_by: newProduct.available_by || null,
+      status: "available",
+    }).select().single();
+
+    if (error) {
+      setAddError("Something went wrong. Please try again.");
+      setAdding(false);
+      return;
+    }
+
+    setProducts((prev) => [...prev, data as Product].sort((a, b) =>
+      (a.brand ?? "").localeCompare(b.brand ?? "") || a.name.localeCompare(b.name)
+    ));
+    setNewProduct({ ...BLANK_NEW_PRODUCT });
+    setShowAddForm(false);
+    setAdding(false);
+  }
+
+  async function deleteProduct(id: number) {
+    setDeleting(id);
+    await supabase.from("products").delete().eq("id", id);
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setConfirmDelete(null);
+    setDeleting(null);
+  }
+
   const filtered = products.filter(
     (p) =>
       !filter ||
@@ -101,18 +162,122 @@ export default function EstateSaleAdmin() {
           Estate Sale
           <span className="ml-2 font-normal text-gray-400">({products.length} items)</span>
         </h2>
-        <input
-          type="text"
-          placeholder="Filter by name or room…"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-gray-600"
-        />
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Filter by name…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border border-gray-300 px-3 py-1.5 text-sm w-56 focus:outline-none focus:border-gray-600"
+          />
+          <button
+            onClick={() => { setShowAddForm(true); setAddError(null); }}
+            className="bg-gray-800 text-white text-sm px-4 py-1.5 hover:bg-gray-700 transition-colors"
+          >
+            + Add Item
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded overflow-hidden">
+      {/* Add item form */}
+      {showAddForm && (
+        <div className="mb-4 border border-gray-300 bg-gray-50 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-4">New Item</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Name <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))}
+                placeholder="e.g. Beau Table Lamp"
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
+              <input
+                type="text"
+                value={newProduct.full_name}
+                onChange={(e) => setNewProduct((p) => ({ ...p, full_name: e.target.value }))}
+                placeholder="Defaults to name if blank"
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Brand</label>
+              <input
+                type="text"
+                value={newProduct.brand}
+                onChange={(e) => setNewProduct((p) => ({ ...p, brand: e.target.value }))}
+                placeholder="e.g. Blu Dot"
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Units</label>
+              <input
+                type="number"
+                min={1}
+                value={newProduct.units}
+                onChange={(e) => setNewProduct((p) => ({ ...p, units: parseInt(e.target.value) || 1 }))}
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Retail Price</label>
+              <input
+                type="number"
+                value={newProduct.retail_price}
+                onChange={(e) => setNewProduct((p) => ({ ...p, retail_price: e.target.value }))}
+                placeholder="$"
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Condition</label>
+              <select
+                value={newProduct.condition}
+                onChange={(e) => setNewProduct((p) => ({ ...p, condition: e.target.value as typeof newProduct.condition }))}
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c} value={c}>{conditionLabel[c]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Available By</label>
+              <input
+                type="date"
+                value={newProduct.available_by}
+                onChange={(e) => setNewProduct((p) => ({ ...p, available_by: e.target.value }))}
+                className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+              />
+            </div>
+          </div>
+          {addError && <p className="text-sm text-red-600 mb-3">{addError}</p>}
+          <div className="flex gap-3">
+            <button
+              onClick={addProduct}
+              disabled={adding || !newProduct.name.trim()}
+              className="bg-gray-800 text-white text-sm px-5 py-1.5 hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            >
+              {adding ? "Adding…" : "Add Item"}
+            </button>
+            <button
+              onClick={() => { setShowAddForm(false); setNewProduct({ ...BLANK_NEW_PRODUCT }); }}
+              className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white border border-gray-200 rounded overflow-hidden" onClick={(e) => { if ((e.target as HTMLElement).closest("button") === null) setConfirmDelete(null); }}>
         {/* Table header */}
-        <div className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
+        <div className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px_40px] gap-x-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] uppercase tracking-wider text-gray-400">
           <span></span>
           <span>Item</span>
           <span>Room</span>
@@ -121,6 +286,7 @@ export default function EstateSaleAdmin() {
           <span>Available By</span>
           <span>Status</span>
           <span>Photos</span>
+          <span></span>
           <span></span>
         </div>
 
@@ -139,7 +305,7 @@ export default function EstateSaleAdmin() {
           return (
             <div
               key={product.id}
-              className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
+              className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px_40px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
             >
               {/* Thumbnail */}
               <div className="w-10 h-10 bg-gray-100 overflow-hidden flex-shrink-0">
@@ -280,6 +446,27 @@ export default function EstateSaleAdmin() {
                     {saving[product.id] ? "…" : "Save"}
                   </button>
                 ) : null}
+              </div>
+
+              {/* Delete */}
+              <div className="flex justify-end">
+                {confirmDelete === product.id ? (
+                  <button
+                    onClick={() => deleteProduct(product.id)}
+                    disabled={deleting === product.id}
+                    className="text-[10px] text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
+                  >
+                    {deleting === product.id ? "…" : "Confirm"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(product.id)}
+                    className="text-gray-300 hover:text-red-500 transition-colors text-sm leading-none"
+                    title="Delete item"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           );

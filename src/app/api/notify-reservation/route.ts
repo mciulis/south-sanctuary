@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const { productName, buyerName, buyerEmail, buyerPhone, message } =
+  const { productName, unitsRequested, buyerName, buyerEmail, buyerPhone, message } =
     await req.json();
 
   await resend.emails.send({
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     subject: `New reservation request — ${productName}`,
     html: `
       <p><strong>Item:</strong> ${productName}</p>
+      ${unitsRequested > 1 ? `<p><strong>Quantity:</strong> ${unitsRequested}</p>` : ""}
       <p><strong>Name:</strong> ${buyerName}</p>
       <p><strong>Email:</strong> ${buyerEmail}</p>
       <p><strong>Phone:</strong> ${buyerPhone || "—"}</p>

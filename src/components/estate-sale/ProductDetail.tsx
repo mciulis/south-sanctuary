@@ -9,6 +9,10 @@ import Carousel from "@/components/ui/Carousel";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
+function roundToNearest5(n: number) {
+  return Math.round(n / 5) * 5;
+}
+
 function getPhotoUrl(path: string) {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${path}`;
 }
@@ -28,7 +32,9 @@ export default function ProductDetail({ product, images }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselOpen, setCarouselOpen] = useState(false);
   const [showReserve, setShowReserve] = useState(false);
-  const [reserved, setReserved] = useState(false);
+  const [localUnitsAvailable, setLocalUnitsAvailable] = useState(product.units_available);
+  const [quantity, setQuantity] = useState(1);
+  const [reservedToast, setReservedToast] = useState(false);
 
   const photos =
     images.length > 0
@@ -48,7 +54,7 @@ export default function ProductDetail({ product, images }: Props) {
     return "Available " + date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
   })();
   const isUnavailable =
-    reserved || product.status !== "available" || product.units_available === 0;
+    product.status !== "available" || localUnitsAvailable === 0;
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.retail_price) * 100)
@@ -125,12 +131,15 @@ export default function ProductDetail({ product, images }: Props) {
             </h1>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 mb-2">
+            <div className="flex items-baseline gap-3 mb-1">
               <span className="text-xl text-ss-ink">
                 {product.sale_price != null
-                  ? `$${product.sale_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                  ? `$${roundToNearest5(product.sale_price).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
                   : "Make an offer"}
               </span>
+              {product.units > 1 && (
+                <span className="text-sm text-ss-taupe">per item</span>
+              )}
               {product.retail_price != null && hasDiscount && (
                 <>
                   <span className="text-sm text-ss-taupe/60 line-through">
@@ -140,28 +149,29 @@ export default function ProductDetail({ product, images }: Props) {
                 </>
               )}
             </div>
-
-            {product.units > 1 && (
-              <p className="text-[11px] text-ss-taupe tracking-wide mb-2">
-                Set of {product.units} · priced for the set
+            {product.sale_price != null && product.units > 1 && quantity > 1 && (
+              <p className="text-[11px] text-ss-taupe mb-1">
+                Total: ${roundToNearest5(product.sale_price * quantity).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
             )}
 
-            {/* Condition + room + availability */}
+            {/* Condition + availability + unit count */}
             <div className="flex gap-4 mb-8 flex-wrap">
               {condition && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {condition}
                 </span>
               )}
-              {product.room && (
-                <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
-                  {product.room}
-                </span>
-              )}
               {availableLabel && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {availableLabel}
+                </span>
+              )}
+              {product.units > 1 && (
+                <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
+                  {localUnitsAvailable > 0
+                    ? `${localUnitsAvailable} of ${product.units} available`
+                    : `0 of ${product.units} — fully reserved`}
                 </span>
               )}
             </div>
@@ -174,12 +184,20 @@ export default function ProductDetail({ product, images }: Props) {
             )}
 
             {/* Dimensions */}
-            {product.dimensions_display && product.dimensions_display !== "#VALUE!" && (
+            {(product.width_in || product.length_in || product.height_in) && (
               <div className="border-t border-ss-border pt-5 mb-8">
                 <p className="text-[10px] tracking-[0.2em] text-ss-taupe uppercase mb-1.5">
                   Dimensions
                 </p>
-                <p className="text-sm text-ss-ink">{product.dimensions_display}</p>
+                <p className="text-sm text-ss-ink">
+                  {[
+                    product.width_in != null ? `${product.width_in}"w` : null,
+                    product.length_in != null ? `${product.length_in}"d` : null,
+                    product.height_in != null ? `${product.height_in}"h` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" x ")}
+                </p>
               </div>
             )}
 
@@ -213,12 +231,38 @@ export default function ProductDetail({ product, images }: Props) {
                 </p>
               </div>
             ) : (
-              <button
-                onClick={() => setShowReserve(true)}
-                className="border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-ss-ink hover:text-white transition-colors duration-300 mt-auto"
-              >
-                Reserve This Item
-              </button>
+              <div className="mt-auto">
+                {localUnitsAvailable > 1 && (
+                  <div className="flex items-center gap-4 mb-5">
+                    <span className="text-[10px] tracking-[0.2em] text-ss-taupe uppercase">
+                      Quantity
+                    </span>
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        className="w-8 h-8 border border-ss-border text-ss-ink hover:border-ss-ink transition-colors flex items-center justify-center text-sm"
+                      >
+                        −
+                      </button>
+                      <span className="w-10 text-center text-sm text-ss-ink">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.min(localUnitsAvailable, q + 1))}
+                        className="w-8 h-8 border border-ss-border text-ss-ink hover:border-ss-ink transition-colors flex items-center justify-center text-sm"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowReserve(true)}
+                  className="w-full border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-ss-ink hover:text-white transition-colors duration-300"
+                >
+                  Reserve {quantity > 1 ? `${quantity} Units` : "This Item"}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -239,16 +283,23 @@ export default function ProductDetail({ product, images }: Props) {
         <ReserveForm
           productId={product.id}
           productName={product.full_name}
-          onSuccess={() => {
+          quantity={quantity}
+          unitsAvailable={localUnitsAvailable}
+          onSuccess={(unitsReserved) => {
             setShowReserve(false);
-            setReserved(true);
+            setLocalUnitsAvailable((prev) => {
+              const remaining = prev - unitsReserved;
+              setQuantity(Math.min(quantity, Math.max(1, remaining)));
+              return remaining;
+            });
+            setReservedToast(true);
           }}
           onCancel={() => setShowReserve(false)}
         />
       )}
 
       {/* Success message */}
-      {reserved && (
+      {reservedToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ss-ink text-white text-[11px] tracking-[0.2em] uppercase px-8 py-4 z-50">
           Request submitted — I&apos;ll be in touch soon.
         </div>
