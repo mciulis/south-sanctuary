@@ -50,6 +50,12 @@ export default function ReserveForm({
       return;
     }
 
+    // Auto-mark the product as reserved
+    await supabase
+      .from("products")
+      .update({ status: "reserved" })
+      .eq("id", productId);
+
     await fetch("/api/notify-reservation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
