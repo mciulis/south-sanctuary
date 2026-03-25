@@ -351,43 +351,58 @@ export default function EstateSaleAdmin() {
                   />
                 </div>
 
-                {/* Discount */}
-                <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-gray-400 w-9 shrink-0">Disc.</span>
-                  {isOverride ? (
-                    <div className="flex items-center gap-0.5">
-                      <input
-                        type="number"
-                        value={overrideVal ?? ""}
-                        onChange={(e) => edit(product.id, "discount_percent", e.target.value ? parseFloat(e.target.value) : null)}
-                        className="w-10 border-b border-amber-400 focus:border-amber-600 bg-transparent py-0.5 text-xs focus:outline-none"
-                      />
-                      <span className="text-[10px] text-gray-400">%</span>
-                      <button
-                        onClick={() => edit(product.id, "discount_percent", null)}
-                        className="text-[10px] text-gray-400 hover:text-gray-700 ml-0.5"
-                        title="Clear override, use formula"
-                      >✕</button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <span className="text-[10px] text-gray-400">{formulaDiscount}%</span>
-                      <button
-                        onClick={() => edit(product.id, "discount_percent", formulaDiscount)}
-                        className="text-[10px] text-blue-500 hover:text-blue-700"
-                      >override</button>
-                    </div>
-                  )}
-                </div>
+                {/* Discount — only shown when retail price is set */}
+                {getVal(product, "retail_price") != null && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-gray-400 w-9 shrink-0">Disc.</span>
+                    {isOverride ? (
+                      <div className="flex items-center gap-0.5">
+                        <input
+                          type="number"
+                          value={overrideVal ?? ""}
+                          onChange={(e) => edit(product.id, "discount_percent", e.target.value ? parseFloat(e.target.value) : null)}
+                          className="w-10 border-b border-amber-400 focus:border-amber-600 bg-transparent py-0.5 text-xs focus:outline-none"
+                        />
+                        <span className="text-[10px] text-gray-400">%</span>
+                        <button
+                          onClick={() => edit(product.id, "discount_percent", null)}
+                          className="text-[10px] text-gray-400 hover:text-gray-700 ml-0.5"
+                          title="Clear override, use formula"
+                        >✕</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-gray-400">{formulaDiscount}%</span>
+                        <button
+                          onClick={() => edit(product.id, "discount_percent", formulaDiscount)}
+                          className="text-[10px] text-blue-500 hover:text-blue-700"
+                        >override</button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Sale (computed) */}
+                {/* Sale — computed when retail is set, directly editable when not */}
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-gray-400 w-9 shrink-0">Sale</span>
-                  <span className="text-xs font-medium text-gray-800">
-                    {getVal(product, "sale_price") != null
-                      ? `$${getVal(product, "sale_price")?.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-                      : "—"}
-                  </span>
+                  {getVal(product, "retail_price") == null ? (
+                    <>
+                      <span className="text-[10px] text-gray-400">$</span>
+                      <input
+                        type="number"
+                        value={getVal(product, "sale_price") ?? ""}
+                        onChange={(e) => edit(product.id, "sale_price", e.target.value ? parseFloat(e.target.value) : null)}
+                        className="w-16 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent py-0.5 text-xs font-medium text-gray-800 focus:outline-none transition-colors"
+                        placeholder="—"
+                      />
+                    </>
+                  ) : (
+                    <span className="text-xs font-medium text-gray-800">
+                      {getVal(product, "sale_price") != null
+                        ? `$${getVal(product, "sale_price")?.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                        : "—"}
+                    </span>
+                  )}
                 </div>
               </div>
 
