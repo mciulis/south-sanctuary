@@ -22,6 +22,18 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     return d;
   }, []);
 
+  const hasFutureItems = useMemo(
+    () => products.some((p) => p.available_by && new Date(p.available_by + "T00:00:00") > today),
+    [products, today]
+  );
+
+  const hasAvailableNow = useMemo(
+    () => products.some((p) => !p.available_by || new Date(p.available_by + "T00:00:00") <= today),
+    [products, today]
+  );
+
+  const showFilter = hasFutureItems && hasAvailableNow;
+
   const sorted = useMemo(() => {
     let list = availableNow
       ? products.filter((p) => {
@@ -71,22 +83,24 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           </div>
         </div>
 
-        {/* Filter row */}
-        <div className="flex items-baseline gap-x-6">
-          <span className="text-[9px] tracking-[0.3em] uppercase italic text-ss-taupe/40 w-14 text-right shrink-0">Filter</span>
+        {/* Filter row — only shown when there's a mix of available-now and future items */}
+        {showFilter && (
           <div className="flex items-baseline gap-x-6">
-            <button
-              onClick={() => setAvailableNow((v) => !v)}
-              className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
-                availableNow
-                  ? "text-ss-ink border-b border-ss-ink"
-                  : "text-ss-taupe hover:text-ss-ink"
-              }`}
-            >
-              Available now
-            </button>
+            <span className="text-[9px] tracking-[0.3em] uppercase italic text-ss-taupe/40 w-14 text-right shrink-0">Filter</span>
+            <div className="flex items-baseline gap-x-6">
+              <button
+                onClick={() => setAvailableNow((v) => !v)}
+                className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
+                  availableNow
+                    ? "text-ss-ink border-b border-ss-ink"
+                    : "text-ss-taupe hover:text-ss-ink"
+                }`}
+              >
+                Available now
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Grid */}

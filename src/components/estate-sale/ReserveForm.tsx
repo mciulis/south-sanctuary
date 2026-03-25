@@ -93,7 +93,8 @@ export default function ReserveForm({
         </p>
         <p className="text-sm text-ss-ink-soft leading-relaxed mb-8">
           Submit your details and I&apos;ll be in touch within 24 hours to
-          arrange payment via PayPal or Venmo and coordinate pickup.
+          coordinate next steps. This is just an expression of interest —
+          no commitment required.
         </p>
         <p className="text-xs text-ss-taupe italic">
           {productName}{quantity > 1 ? ` — ${quantity} units` : ""}

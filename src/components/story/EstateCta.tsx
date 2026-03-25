@@ -12,10 +12,12 @@ export default function EstateCta({
   content = {},
   hideButton = false,
   backgroundImage,
+  footnote,
 }: {
   content?: EstateCtaContent;
   hideButton?: boolean;
   backgroundImage?: string;
+  footnote?: string;
 }) {
   const {
     headline1 = "THE ESTATE SALE",
@@ -64,6 +66,11 @@ export default function EstateCta({
           >
             {button_text}
           </Link>
+        )}
+        {footnote && (
+          <p className="text-[11px] italic text-white/65 mt-10 max-w-xs mx-auto leading-relaxed">
+            {footnote}
+          </p>
         )}
       </div>
     </section>
