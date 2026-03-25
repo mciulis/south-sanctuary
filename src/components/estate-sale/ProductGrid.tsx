@@ -49,34 +49,44 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
   return (
     <>
-      {/* Sort / filter row */}
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 justify-center mb-12">
-        <span className="text-[10px] tracking-[0.22em] uppercase text-ss-taupe/50">Sort by</span>
-        {SORT_OPTIONS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setSortBy(key)}
-            className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
-              sortBy === key
-                ? "text-ss-ink border-b border-ss-ink"
-                : "text-ss-taupe hover:text-ss-ink"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-        <span className="text-ss-taupe/30 text-[10px]">|</span>
-        <span className="text-[10px] tracking-[0.22em] uppercase text-ss-taupe/50">Filter by</span>
-        <button
-          onClick={() => setAvailableNow((v) => !v)}
-          className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
-            availableNow
-              ? "text-ss-ink border-b border-ss-ink"
-              : "text-ss-taupe hover:text-ss-ink"
-          }`}
-        >
-          Available now
-        </button>
+      {/* Sort / filter rows */}
+      <div className="flex flex-col items-center gap-y-3 mb-12">
+        {/* Sort row */}
+        <div className="flex items-baseline gap-x-6">
+          <span className="text-[9px] tracking-[0.3em] uppercase italic text-ss-taupe/40 w-14 text-right shrink-0">Sort</span>
+          <div className="flex items-baseline gap-x-6">
+            {SORT_OPTIONS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setSortBy(key)}
+                className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
+                  sortBy === key
+                    ? "text-ss-ink border-b border-ss-ink"
+                    : "text-ss-taupe hover:text-ss-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Filter row */}
+        <div className="flex items-baseline gap-x-6">
+          <span className="text-[9px] tracking-[0.3em] uppercase italic text-ss-taupe/40 w-14 text-right shrink-0">Filter</span>
+          <div className="flex items-baseline gap-x-6">
+            <button
+              onClick={() => setAvailableNow((v) => !v)}
+              className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
+                availableNow
+                  ? "text-ss-ink border-b border-ss-ink"
+                  : "text-ss-taupe hover:text-ss-ink"
+              }`}
+            >
+              Available now
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Grid */}

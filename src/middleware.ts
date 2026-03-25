@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Always allow the login page and auth API
@@ -9,9 +9,43 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const authCookie = request.cookies.get("ss_auth");
-  const sitePassword = process.env.SITE_PASSWORD;
+  // Fetch site settings from Supabase
+  let protectionEnabled = true;
+  let sitePassword = process.env.SITE_PASSWORD ?? "";
 
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/site_settings?key=in.(password_protection_enabled,site_password)&select=key,value`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        next: { revalidate: 30 },
+      }
+    );
+    if (res.ok) {
+      const rows: { key: string; value: string }[] = await res.json();
+      for (const row of rows) {
+        if (row.key === "password_protection_enabled") {
+          protectionEnabled = row.value === "true";
+        }
+        if (row.key === "site_password") {
+          sitePassword = row.value;
+        }
+      }
+    }
+  } catch {
+    // Fall back to env var on error
+  }
+
+  if (!protectionEnabled) {
+    return NextResponse.next();
+  }
+
+  const authCookie = request.cookies.get("ss_auth");
   if (!authCookie || authCookie.value !== sitePassword) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("from", pathname);
