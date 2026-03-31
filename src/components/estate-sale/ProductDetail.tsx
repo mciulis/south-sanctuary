@@ -34,7 +34,7 @@ export default function ProductDetail({ product, images }: Props) {
   const [showReserve, setShowReserve] = useState(false);
   const [localUnitsAvailable, setLocalUnitsAvailable] = useState(product.units_available);
   const [quantity, setQuantity] = useState(1);
-  const [reservedToast, setReservedToast] = useState(false);
+  const [requestToast, setRequestToast] = useState(false);
 
   const photos =
     images.length > 0
@@ -171,7 +171,7 @@ export default function ProductDetail({ product, images }: Props) {
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {localUnitsAvailable > 0
                     ? `${localUnitsAvailable} of ${product.units} available`
-                    : `0 of ${product.units} — fully reserved`}
+                    : `0 of ${product.units} available`}
                 </span>
               )}
             </div>
@@ -223,11 +223,11 @@ export default function ProductDetail({ product, images }: Props) {
               </div>
             )}
 
-            {/* Reserve CTA */}
+            {/* Request CTA */}
             {isUnavailable ? (
               <div className="border border-ss-border text-center py-4 mt-auto">
                 <p className="text-[11px] tracking-[0.22em] uppercase text-ss-taupe">
-                  This item has been reserved
+                  This item is no longer available
                 </p>
               </div>
             ) : (
@@ -260,8 +260,11 @@ export default function ProductDetail({ product, images }: Props) {
                   onClick={() => setShowReserve(true)}
                   className="w-full border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-ss-ink hover:text-white transition-colors duration-300"
                 >
-                  Reserve {quantity > 1 ? `${quantity} Units` : "This Item"}
+                  Request {quantity > 1 ? `${quantity} Units` : "This Item"}
                 </button>
+                <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe">
+                  Limited availability — requests are reviewed in the order received.
+                </p>
               </div>
             )}
           </div>
@@ -278,30 +281,27 @@ export default function ProductDetail({ product, images }: Props) {
         />
       )}
 
-      {/* Reserve modal */}
+      {/* Request modal */}
       {showReserve && (
         <ReserveForm
           productId={product.id}
           productName={product.full_name}
           quantity={quantity}
           unitsAvailable={localUnitsAvailable}
-          onSuccess={(unitsReserved) => {
+          onSuccess={() => {
             setShowReserve(false);
-            setLocalUnitsAvailable((prev) => {
-              const remaining = prev - unitsReserved;
-              setQuantity(Math.min(quantity, Math.max(1, remaining)));
-              return remaining;
-            });
-            setReservedToast(true);
+            setLocalUnitsAvailable(product.units_available);
+            setQuantity(1);
+            setRequestToast(true);
           }}
           onCancel={() => setShowReserve(false)}
         />
       )}
 
       {/* Success message */}
-      {reservedToast && (
+      {requestToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ss-ink text-white text-[11px] tracking-[0.2em] uppercase px-8 py-4 z-50">
-          Request submitted — I&apos;ll be in touch soon.
+          Your request has been received. We&apos;ll follow up shortly to confirm availability and next steps.
         </div>
       )}
     </>

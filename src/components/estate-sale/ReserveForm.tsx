@@ -8,7 +8,7 @@ interface Props {
   productName: string;
   quantity: number;
   unitsAvailable: number;
-  onSuccess: (unitsReserved: number) => void;
+  onSuccess: () => void;
   onCancel: () => void;
 }
 
@@ -55,12 +55,6 @@ export default function ReserveForm({
       return;
     }
 
-    // Decrement units_available; mark reserved only if none remain
-    const remaining = unitsAvailable - quantity;
-    const productUpdate: Record<string, unknown> = { units_available: remaining };
-    if (remaining <= 0) productUpdate.status = "reserved";
-    await supabase.from("products").update(productUpdate).eq("id", productId);
-
     await fetch("/api/notify-reservation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -75,7 +69,7 @@ export default function ReserveForm({
     });
 
     setSubmitting(false);
-    onSuccess(quantity);
+    onSuccess();
   }
 
   return (
@@ -89,20 +83,18 @@ export default function ReserveForm({
       {/* Panel */}
       <div className="relative w-full md:max-w-lg bg-ss-cream p-8 md:p-10 md:mx-4">
         <p className="text-[10px] tracking-[0.28em] text-ss-taupe uppercase mb-6">
-          Reserve This Item
+          Request This Item
         </p>
         <p className="text-sm text-ss-ink-soft leading-relaxed mb-8">
-          Submit your details and I&apos;ll be in touch within 24 hours to
-          coordinate next steps. This is just an expression of interest —
-          no commitment required.
+          Submit your details to request this item.
+          We&apos;re reviewing requests in the order received and will confirm availability shortly.
+          No payment is required today. Items will be available for pickup after July 1.
         </p>
         <p className="text-xs text-ss-taupe italic">
           {productName}{quantity > 1 ? ` — ${quantity} units` : ""}
         </p>
         <p className="text-[10px] tracking-[0.18em] text-ss-taupe/60 uppercase mt-1 mb-8">
-          {unitsAvailable - quantity > 0
-            ? `${unitsAvailable - quantity} of ${unitsAvailable} remaining after this reservation`
-            : "This will reserve the last available unit"}
+          {unitsAvailable > 1 ? "Requests processed in order received" : "Limited quantity available"}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">

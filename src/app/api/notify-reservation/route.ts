@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   await resend.emails.send({
     from: "onboarding@resend.dev",
     to: process.env.NOTIFICATION_EMAIL!,
-    subject: `New reservation request — ${productName}`,
+    subject: `New item request — ${productName}`,
     html: `
       <p><strong>Item:</strong> ${productName}</p>
       ${unitsRequested > 1 ? `<p><strong>Quantity:</strong> ${unitsRequested}</p>` : ""}
