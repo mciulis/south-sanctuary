@@ -4,64 +4,37 @@ import { useState, useMemo } from "react";
 import { Product } from "@/types/estate";
 import ProductCard from "./ProductCard";
 
-type SortKey = "brand" | "name" | "available_date";
+type SortKey = "brand" | "name";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "brand", label: "Brand" },
   { key: "name", label: "Name" },
-  { key: "available_date", label: "Available date" },
 ];
 
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [sortBy, setSortBy] = useState<SortKey>("brand");
-  const [availableNow, setAvailableNow] = useState(false);
-
-  const today = useMemo(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }, []);
-
-  const hasFutureItems = useMemo(
-    () => products.some((p) => p.available_by && new Date(p.available_by + "T00:00:00") > today),
-    [products, today]
-  );
-
-  const hasAvailableNow = useMemo(
-    () => products.some((p) => !p.available_by || new Date(p.available_by + "T00:00:00") <= today),
-    [products, today]
-  );
-
-  const showFilter = hasFutureItems && hasAvailableNow;
 
   const sorted = useMemo(() => {
-    let list = availableNow
-      ? products.filter((p) => {
-          if (!p.available_by) return true;
-          return new Date(p.available_by + "T00:00:00") <= today;
-        })
-      : [...products];
+    const list = [...products];
 
     list.sort((a, b) => {
       if (sortBy === "brand") {
         return (a.brand ?? "").localeCompare(b.brand ?? "");
       }
-      if (sortBy === "name") {
-        return a.name.localeCompare(b.name);
-      }
-      // available_date: nulls last
-      if (!a.available_by && !b.available_by) return 0;
-      if (!a.available_by) return 1;
-      if (!b.available_by) return -1;
-      return a.available_by.localeCompare(b.available_by);
+      return a.name.localeCompare(b.name);
     });
 
     return list;
-  }, [products, sortBy, availableNow, today]);
+  }, [products, sortBy]);
 
   return (
     <>
-      {/* Sort / filter rows */}
+      {/* Availability context */}
+      <p className="text-center text-[11px] tracking-[0.16em] text-ss-taupe/70 uppercase mb-8">
+        Items become available after closing — estimated early July
+      </p>
+
+      {/* Sort row */}
       <div className="flex flex-col items-center gap-y-3 mb-12">
         {/* Sort row */}
         <div className="flex items-baseline gap-x-6">
@@ -83,24 +56,6 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           </div>
         </div>
 
-        {/* Filter row — only shown when there's a mix of available-now and future items */}
-        {showFilter && (
-          <div className="flex items-baseline gap-x-6">
-            <span className="text-[9px] tracking-[0.3em] uppercase italic text-ss-taupe/40 w-14 text-right shrink-0">Filter</span>
-            <div className="flex items-baseline gap-x-6">
-              <button
-                onClick={() => setAvailableNow((v) => !v)}
-                className={`text-[10px] tracking-[0.22em] uppercase pb-0.5 transition-colors duration-200 ${
-                  availableNow
-                    ? "text-ss-ink border-b border-ss-ink"
-                    : "text-ss-taupe hover:text-ss-ink"
-                }`}
-              >
-                Available now
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Grid */}

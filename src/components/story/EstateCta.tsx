@@ -21,8 +21,8 @@ export default function EstateCta({
 }) {
   const {
     headline1 = "THE ESTATE SALE",
-    headline2 = "Is Now Available",
-    body = ["Every piece in this home was chosen deliberately — for its material, its warmth, its relationship to the room it would live in and the other furniture it would live beside. The full collection is now available, offered fairly to someone who will give it a second life."],
+    headline2 = "Is Now Open",
+    body = ["Every piece in this home was chosen deliberately — for its material, its warmth, its relationship to the room it would live in and the other furniture it would live beside. The full collection is being offered fairly to someone who will give it a second life."],
     button_text = "Browse the Collection",
   } = content;
 

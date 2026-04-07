@@ -83,18 +83,13 @@ export default function ReserveForm({
       {/* Panel */}
       <div className="relative w-full md:max-w-lg bg-ss-cream p-8 md:p-10 md:mx-4">
         <p className="text-[10px] tracking-[0.28em] text-ss-taupe uppercase mb-6">
-          Request This Item
+          Notify Me
         </p>
         <p className="text-sm text-ss-ink-soft leading-relaxed mb-8">
-          Submit your details to request this item.
-          We&apos;re reviewing requests in the order received and will confirm availability shortly.
-          No payment is required today. Items will be available for pickup after July 1.
+          Leave your contact info and we&apos;ll reach out as soon as this piece is available after closing. No commitment required.
         </p>
         <p className="text-xs text-ss-taupe italic">
           {productName}{quantity > 1 ? ` — ${quantity} units` : ""}
-        </p>
-        <p className="text-[10px] tracking-[0.18em] text-ss-taupe/60 uppercase mt-1 mb-8">
-          {unitsAvailable > 1 ? "Requests processed in order received" : "Limited quantity available"}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -137,6 +132,9 @@ export default function ReserveForm({
               className="w-full border-b border-ss-border bg-transparent py-2 text-sm text-ss-ink placeholder:text-ss-taupe/40 focus:outline-none focus:border-ss-ink transition-colors"
               placeholder="(503) 555-0100"
             />
+            <p className="text-[10px] text-ss-taupe/60 mt-1.5">
+              We&apos;ll text you when it&apos;s available.
+            </p>
           </div>
 
           <div>
@@ -160,7 +158,7 @@ export default function ReserveForm({
               disabled={submitting}
               className="flex-1 border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase py-3.5 hover:bg-ss-ink hover:text-white transition-colors duration-300 disabled:opacity-50"
             >
-              {submitting ? "Submitting..." : "Submit Request"}
+              {submitting ? "Submitting..." : "Notify Me"}
             </button>
             <button
               type="button"

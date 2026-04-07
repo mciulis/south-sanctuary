@@ -45,16 +45,8 @@ export default function ProductDetail({ product, images }: Props) {
 
   const brand = product.brand;
   const condition = conditionLabel[product.condition] || "";
-  const availableLabel = (() => {
-    if (!product.available_by) return null;
-    const date = new Date(product.available_by + "T00:00:00");
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (date <= today) return "Available now";
-    return "Available " + date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-  })();
-  const isUnavailable =
-    product.status !== "available" || localUnitsAvailable === 0;
+  const isSold =
+    product.status === "sold" || localUnitsAvailable === 0;
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.retail_price) * 100)
@@ -155,16 +147,11 @@ export default function ProductDetail({ product, images }: Props) {
               </p>
             )}
 
-            {/* Condition + availability + unit count */}
+            {/* Condition + unit count */}
             <div className="flex gap-4 mb-8 flex-wrap">
               {condition && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {condition}
-                </span>
-              )}
-              {availableLabel && (
-                <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
-                  {availableLabel}
                 </span>
               )}
               {product.units > 1 && (
@@ -223,11 +210,11 @@ export default function ProductDetail({ product, images }: Props) {
               </div>
             )}
 
-            {/* Request CTA */}
-            {isUnavailable ? (
+            {/* CTA */}
+            {isSold ? (
               <div className="border border-ss-border text-center py-4 mt-auto">
                 <p className="text-[11px] tracking-[0.22em] uppercase text-ss-taupe">
-                  This item is no longer available
+                  Sold
                 </p>
               </div>
             ) : (
@@ -260,10 +247,10 @@ export default function ProductDetail({ product, images }: Props) {
                   onClick={() => setShowReserve(true)}
                   className="w-full border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-ss-ink hover:text-white transition-colors duration-300"
                 >
-                  Request {quantity > 1 ? `${quantity} Units` : "This Item"}
+                  Notify Me When Available
                 </button>
                 <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe">
-                  Limited availability — requests are reviewed in the order received.
+                  No commitment — we&apos;ll reach out when it&apos;s available.
                 </p>
               </div>
             )}
@@ -301,7 +288,7 @@ export default function ProductDetail({ product, images }: Props) {
       {/* Success message */}
       {requestToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ss-ink text-white text-[11px] tracking-[0.2em] uppercase px-8 py-4 z-50">
-          Your request has been received. We&apos;ll follow up shortly to confirm availability and next steps.
+          We&apos;ve received your interest. You&apos;ll hear from us as soon as {product.full_name} is available.
         </div>
       )}
     </>

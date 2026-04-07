@@ -40,7 +40,7 @@ export default async function EstateSalePage() {
           content={sectionsData?.content}
           hideButton
           backgroundImage="/images/estate-sale-hero.jpg"
-          footnote="Items available for pickup after closing."
+          footnote="Available after closing, estimated early July."
         />
       </div>
 

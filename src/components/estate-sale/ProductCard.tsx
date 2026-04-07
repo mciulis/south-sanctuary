@@ -2,15 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/estate";
 
-function formatAvailableBy(dateStr: string | null): string | null {
-  if (!dateStr) return null;
-  const date = new Date(dateStr + "T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (date <= today) return "Available now";
-  return "Available " + date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 function getPhotoUrl(filename: string | null): string | null {
@@ -24,9 +15,8 @@ function roundToNearest5(n: number) {
 
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
-  const isUnavailable = product.status !== "available" || product.units_available === 0;
+  const isSold = product.status === "sold" || product.units_available === 0;
   const brand = product.brand;
-  const availableLabel = formatAvailableBy(product.available_by);
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.retail_price) * 100)
@@ -43,7 +33,7 @@ export default function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             fill
             className={`object-cover transition-transform duration-500 group-hover:scale-[1.03] ${
-              isUnavailable ? "opacity-50" : ""
+              isSold ? "opacity-40" : ""
             }`}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
@@ -54,14 +44,14 @@ export default function ProductCard({ product }: { product: Product }) {
             </p>
           </div>
         )}
-        {isUnavailable && (
+        {isSold && (
           <div className="absolute inset-0 flex items-end p-3">
             <span className="text-[9px] tracking-[0.2em] uppercase bg-ss-ink text-white px-2 py-1">
-              Reserved
+              Sold
             </span>
           </div>
         )}
-        {!isUnavailable && product.units_available > 1 && (
+        {!isSold && product.units_available > 1 && (
           <div className="absolute top-3 right-3">
             <span className="text-[9px] tracking-[0.2em] uppercase bg-white/90 text-ss-ink px-2 py-1">
               {product.units_available} available
@@ -95,9 +85,6 @@ export default function ProductCard({ product }: { product: Product }) {
             </>
           )}
         </div>
-        {availableLabel && (
-          <p className="text-[10px] text-ss-taupe/70 mt-0.5">{availableLabel}</p>
-        )}
       </div>
     </Link>
   );
