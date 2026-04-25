@@ -21,6 +21,16 @@ const statusColor: Record<string, string> = {
   sold: "bg-gray-200 text-gray-500",
 };
 
+function formatSupabaseError(message: string | null | undefined) {
+  if (!message) return "Something went wrong. Please try again.";
+
+  if (message.includes("available_by")) {
+    return "The database rejected the available date field. The products table likely needs an `available_by` column.";
+  }
+
+  return message;
+}
+
 const BLANK_NEW_PRODUCT = {
   name: "",
   full_name: "",
@@ -124,7 +134,8 @@ export default function EstateSaleAdmin() {
     }).select().single();
 
     if (error) {
-      setAddError("Something went wrong. Please try again.");
+      console.error("Failed to add product", error);
+      setAddError(formatSupabaseError(error.message));
       setAdding(false);
       return;
     }
