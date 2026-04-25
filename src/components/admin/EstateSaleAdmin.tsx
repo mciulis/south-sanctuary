@@ -31,6 +31,20 @@ function formatSupabaseError(message: string | null | undefined) {
   return message;
 }
 
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+        ? payload.error
+        : "Something went wrong. Please try again.";
+    throw new Error(formatSupabaseError(message));
+  }
+
+  return payload as T;
+}
+
 const BLANK_NEW_PRODUCT = {
   name: "",
   full_name: "",
@@ -100,14 +114,22 @@ export default function EstateSaleAdmin() {
     const e = edits[product.id];
     if (!e) return;
     setSaving((p) => ({ ...p, [product.id]: true }));
-    await supabase.from("products").update(e).eq("id", product.id);
-    setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, ...e } : p))
-    );
-    setEdits((prev) => { const n = { ...prev }; delete n[product.id]; return n; });
-    setSaving((p) => ({ ...p, [product.id]: false }));
-    setSaved((p) => ({ ...p, [product.id]: true }));
-    setTimeout(() => setSaved((p) => ({ ...p, [product.id]: false })), 2000);
+    try {
+      const updated = await parseApiResponse<Product>(await fetch(`/api/admin/estate-products/${product.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(e),
+      }));
+
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? updated : p)));
+      setEdits((prev) => { const n = { ...prev }; delete n[product.id]; return n; });
+      setSaved((p) => ({ ...p, [product.id]: true }));
+      setTimeout(() => setSaved((p) => ({ ...p, [product.id]: false })), 2000);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to save item.");
+    } finally {
+      setSaving((p) => ({ ...p, [product.id]: false }));
+    }
   }
 
   async function addProduct() {
@@ -120,40 +142,49 @@ export default function EstateSaleAdmin() {
     const sale_price = retail != null ? Math.round(retail * (1 - pct / 100)) : null;
     const units = Number(newProduct.units) || 1;
 
-    const { data, error } = await supabase.from("products").insert({
-      name: newProduct.name.trim(),
-      full_name: newProduct.full_name.trim() || newProduct.name.trim(),
-      brand: newProduct.brand.trim() || null,
-      units,
-      units_available: units,
-      retail_price: retail,
-      sale_price,
-      condition: newProduct.condition,
-      available_by: newProduct.available_by || null,
-      status: "available",
-    }).select().single();
+    try {
+      const data = await parseApiResponse<Product>(await fetch("/api/admin/estate-products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newProduct.name.trim(),
+          full_name: newProduct.full_name.trim() || newProduct.name.trim(),
+          brand: newProduct.brand.trim() || null,
+          units,
+          units_available: units,
+          retail_price: retail,
+          sale_price,
+          condition: newProduct.condition,
+          available_by: newProduct.available_by || null,
+          status: "available",
+        }),
+      }));
 
-    if (error) {
-      console.error("Failed to add product", error);
-      setAddError(formatSupabaseError(error.message));
+      setProducts((prev) => [...prev, data].sort((a, b) =>
+        (a.brand ?? "").localeCompare(b.brand ?? "") || a.name.localeCompare(b.name)
+      ));
+      setNewProduct({ ...BLANK_NEW_PRODUCT });
+      setShowAddForm(false);
+    } catch (error) {
+      setAddError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
       setAdding(false);
-      return;
     }
-
-    setProducts((prev) => [...prev, data as Product].sort((a, b) =>
-      (a.brand ?? "").localeCompare(b.brand ?? "") || a.name.localeCompare(b.name)
-    ));
-    setNewProduct({ ...BLANK_NEW_PRODUCT });
-    setShowAddForm(false);
-    setAdding(false);
   }
 
   async function deleteProduct(id: number) {
     setDeleting(id);
-    await supabase.from("products").delete().eq("id", id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    setConfirmDelete(null);
-    setDeleting(null);
+    try {
+      await parseApiResponse<{ ok: true }>(await fetch(`/api/admin/estate-products/${id}`, {
+        method: "DELETE",
+      }));
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setConfirmDelete(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete item.");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   const filtered = products.filter(

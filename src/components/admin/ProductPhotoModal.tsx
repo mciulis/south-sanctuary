@@ -32,6 +32,20 @@ function photoUrl(filename: string) {
   return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
 }
 
+async function parseApiResponse<T>(response: Response): Promise<T> {
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      payload && typeof payload === "object" && "error" in payload && typeof payload.error === "string"
+        ? payload.error
+        : "Something went wrong. Please try again.";
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
 function SortablePhoto({
   image,
   isHero,
@@ -112,6 +126,7 @@ export default function ProductPhotoModal({
   const [images, setImages] = useState<ProductImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -140,94 +155,80 @@ export default function ProductPhotoModal({
     }));
     setImages(reordered);
 
-    // Persist new sort_order
-    await Promise.all(
-      reordered.map((img) =>
-        supabase.from("product_images").update({ sort_order: img.sort_order }).eq("id", img.id)
-      )
-    );
-
-    // If hero changed position, update main_photo_filename
-    const newHero = reordered[0];
-    if (newHero && newHero.filename !== product.main_photo_filename) {
-      await setHero(newHero.filename, reordered);
+    try {
+      const result = await parseApiResponse<{ images: ProductImage[]; main_photo_filename: string | null }>(
+        await fetch(`/api/admin/estate-products/${product.id}/photos`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "reorder",
+            imageIds: reordered.map((image) => image.id),
+          }),
+        })
+      );
+      setImages(result.images);
+      onUpdated({ ...product, main_photo_filename: result.main_photo_filename });
+      setError(null);
+    } catch (err) {
+      setImages(images);
+      setError(err instanceof Error ? err.message : "Failed to reorder photos.");
     }
   }
 
-  async function setHero(filename: string, currentImages?: ProductImage[]) {
-    await supabase.from("products").update({ main_photo_filename: filename }).eq("id", product.id);
-    onUpdated({ ...product, main_photo_filename: filename });
-
-    // Reorder so hero is first
-    const imgs = currentImages ?? images;
-    const heroIdx = imgs.findIndex((i) => i.filename === filename);
-    if (heroIdx > 0) {
-      const reordered = arrayMove(imgs, heroIdx, 0).map((img, idx) => ({
-        ...img,
-        sort_order: idx,
-      }));
-      setImages(reordered);
-      await Promise.all(
-        reordered.map((img) =>
-          supabase.from("product_images").update({ sort_order: img.sort_order }).eq("id", img.id)
-        )
+  async function setHero(filename: string) {
+    try {
+      const result = await parseApiResponse<{ images: ProductImage[]; main_photo_filename: string | null }>(
+        await fetch(`/api/admin/estate-products/${product.id}/photos`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "setHero", filename }),
+        })
       );
+      setImages(result.images);
+      onUpdated({ ...product, main_photo_filename: result.main_photo_filename });
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update hero photo.");
     }
   }
 
   async function deletePhoto(image: ProductImage) {
     if (!confirm("Delete this photo?")) return;
-    await supabase.storage.from("products").remove([image.filename]);
-    await supabase.from("product_images").delete().eq("id", image.id);
-
-    const remaining = images.filter((i) => i.id !== image.id);
-    setImages(remaining);
-
-    // If deleted hero, promote next
-    if (image.filename === product.main_photo_filename) {
-      const next = remaining[0] ?? null;
-      await supabase
-        .from("products")
-        .update({ main_photo_filename: next?.filename ?? null })
-        .eq("id", product.id);
-      onUpdated({ ...product, main_photo_filename: next?.filename ?? null });
+    try {
+      const result = await parseApiResponse<{ images: ProductImage[]; main_photo_filename: string | null }>(
+        await fetch(`/api/admin/estate-products/${product.id}/photos/${image.id}`, {
+          method: "DELETE",
+        })
+      );
+      setImages(result.images);
+      onUpdated({ ...product, main_photo_filename: result.main_photo_filename });
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete photo.");
     }
   }
 
   async function uploadPhotos(files: FileList) {
     setUploading(true);
-    const newImages: ProductImage[] = [];
+    try {
+      const formData = new FormData();
+      Array.from(files).forEach((file) => formData.append("files", file));
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const filename = `${product.id}/${Date.now()}-${i}.${ext}`;
-
-      const { error } = await supabase.storage.from("products").upload(filename, file, {
-        contentType: file.type,
-        upsert: false,
-      });
-      if (error) { console.error(error); continue; }
-
-      const sort_order = images.length + newImages.length;
-      const { data } = await supabase
-        .from("product_images")
-        .insert({ product_id: product.id, filename, sort_order })
-        .select()
-        .single();
-
-      if (data) newImages.push(data as ProductImage);
+      const result = await parseApiResponse<{ images: ProductImage[]; main_photo_filename: string | null }>(
+        await fetch(`/api/admin/estate-products/${product.id}/photos`, {
+          method: "POST",
+          body: formData,
+        })
+      );
+      setImages(result.images);
+      onUpdated({ ...product, main_photo_filename: result.main_photo_filename });
+      setError(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload photos.");
+    } finally {
+      setUploading(false);
     }
-
-    const allImages = [...images, ...newImages];
-    setImages(allImages);
-
-    // Set hero if product had none
-    if (!product.main_photo_filename && allImages.length > 0) {
-      await setHero(allImages[0].filename, allImages);
-    }
-
-    setUploading(false);
   }
 
   return (
@@ -253,6 +254,7 @@ export default function ProductPhotoModal({
             <p className="text-sm text-gray-400">Loading…</p>
           ) : (
             <>
+              {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
               <p className="text-xs text-gray-400 mb-3">
                 Drag to reorder · First photo is the hero image
               </p>
