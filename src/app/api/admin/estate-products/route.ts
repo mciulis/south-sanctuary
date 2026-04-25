@@ -4,7 +4,21 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
+  const { data: lastProduct, error: lastProductError } = await supabaseAdmin
+    .from("products")
+    .select("id")
+    .order("id", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastProductError) {
+    return NextResponse.json({ error: lastProductError.message }, { status: 500 });
+  }
+
+  const nextId = (lastProduct?.id ?? 0) + 1;
+
   const payload = {
+    id: nextId,
     name: typeof body.name === "string" ? body.name.trim() : "",
     full_name: typeof body.full_name === "string" && body.full_name.trim()
       ? body.full_name.trim()
