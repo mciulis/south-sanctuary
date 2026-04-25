@@ -1,11 +1,9 @@
 import { Metadata } from "next";
-import {
-  Zap, Car, MapPin, Leaf, Package, Wrench, Trees, Sun, Waves, Mountain,
-  ShoppingCart, Coffee, SquareParking, type LucideIcon,
-} from "lucide-react";
+import { MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import BlueprintGrid from "@/components/records/BlueprintGrid";
 import PaintGrid from "@/components/records/PaintGrid";
+import { QUIET_DISTINCTION_ICON_MAP } from "@/lib/records-icons";
 
 export const metadata: Metadata = {
   title: "Records — South Sanctuary",
@@ -13,13 +11,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 60;
-
-// ─── Icon map ─────────────────────────────────────────────────────────────────
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Car, Coffee, Leaf, MapPin, Mountain, Package,
-  ShoppingCart, SquareParking, Sun, Trees, Waves, Wrench, Zap,
-};
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -94,7 +85,7 @@ export default async function RecordsPage() {
           <SectionHeader label="Quiet Distinctions" />
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-5">
             {distinctions.map(({ icon, label }) => {
-              const Icon = ICON_MAP[icon] ?? MapPin;
+              const Icon = QUIET_DISTINCTION_ICON_MAP[icon] ?? MapPin;
               return (
                 <div key={label} className="flex items-start gap-3">
                   <Icon size={15} className="text-ss-taupe mt-0.5 flex-shrink-0" strokeWidth={1.5} />

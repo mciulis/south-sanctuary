@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Plus, Trash2, GripVertical } from "lucide-react";
+import { QUIET_DISTINCTION_ICONS } from "@/lib/records-icons";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, verticalListSortingStrategy,
-  rectSortingStrategy, arrayMove,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -229,11 +230,6 @@ function UpgradesSection() {
 
 // ─── Quiet Distinctions ───────────────────────────────────────────────────────
 
-const ICON_OPTIONS = [
-  "Car", "Coffee", "Leaf", "MapPin", "Mountain", "Package",
-  "ShoppingCart", "SquareParking", "Sun", "Trees", "Waves", "Wrench", "Zap",
-];
-
 function SortableDistinctionRow({ row, onUpdate, onRemove }: {
   row: DistinctionRow & { _id: string };
   onUpdate: (field: keyof DistinctionRow, val: string) => void;
@@ -248,8 +244,8 @@ function SortableDistinctionRow({ row, onUpdate, onRemove }: {
         <GripVertical size={14} />
       </button>
       <select value={row.icon} onChange={(e) => onUpdate("icon", e.target.value)}
-        className="w-36 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white">
-        {ICON_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+        className="w-44 border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded bg-white">
+        {QUIET_DISTINCTION_ICONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
       </select>
       <input value={row.label} onChange={(e) => onUpdate("label", e.target.value)} placeholder="Label"
         className="flex-1 border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-400 rounded" />
