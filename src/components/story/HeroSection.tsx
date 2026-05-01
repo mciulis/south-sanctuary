@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { track } from "@vercel/analytics";
 
 interface HeroContent {
   headline1?: string;
@@ -45,6 +48,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
             href="https://www.zillow.com/homedetails/230-S-Canby-St-Portland-OR-97219/53834795_zpid/"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track("listing_click", { platform: "zillow" })}
             className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
           >
             View on Zillow
@@ -53,6 +57,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
             href="https://www.redfin.com/OR/Portland/230-S-Canby-St-97219/home/26390460"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track("listing_click", { platform: "redfin" })}
             className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
           >
             View on Redfin
