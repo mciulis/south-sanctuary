@@ -12,7 +12,7 @@ export async function DELETE(
 ) {
   const { id: rawId, imageId: rawImageId } = await params;
   const productId = parsePositiveInt(rawId);
-  const imageId = parsePositiveInt(rawImageId);
+  const imageId = rawImageId?.trim() || null;
 
   if (!productId || !imageId) {
     return NextResponse.json({ error: "Invalid photo request." }, { status: 400 });

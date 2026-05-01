@@ -113,7 +113,7 @@ export async function PATCH(
   const images = await fetchOrderedImages(productId);
 
   if (action === "reorder") {
-    const imageIds: number[] = Array.isArray(body.imageIds) ? body.imageIds.map(Number) : [];
+    const imageIds: string[] = Array.isArray(body.imageIds) ? body.imageIds.map(String) : [];
     if (imageIds.length !== images.length) {
       return NextResponse.json({ error: "Image reorder payload is invalid." }, { status: 400 });
     }

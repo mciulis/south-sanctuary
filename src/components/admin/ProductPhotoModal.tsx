@@ -22,7 +22,7 @@ import { Product } from "@/types/estate";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 interface ProductImage {
-  id: number;
+  id: string;
   product_id: number;
   filename: string;
   sort_order: number;

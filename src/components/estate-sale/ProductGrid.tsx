@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import { Product } from "@/types/estate";
 import ProductCard from "./ProductCard";
 
-type SortKey = "brand" | "name";
+type SortKey = "brand" | "name" | "room";
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "brand", label: "Brand" },
   { key: "name", label: "Name" },
+  { key: "room", label: "Room" },
 ];
 
 export default function ProductGrid({ products }: { products: Product[] }) {
@@ -21,6 +22,9 @@ export default function ProductGrid({ products }: { products: Product[] }) {
       if (sortBy === "brand") {
         return (a.brand ?? "").localeCompare(b.brand ?? "");
       }
+      if (sortBy === "room") {
+        return (a.room ?? "￿").localeCompare(b.room ?? "￿");
+      }
       return a.name.localeCompare(b.name);
     });
 
@@ -31,7 +35,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     <>
       {/* Availability context */}
       <p className="text-center text-[11px] tracking-[0.16em] text-ss-taupe/70 uppercase mb-8">
-        Items become available after closing — estimated early July
+        Items become available after closing
       </p>
 
       {/* Sort row */}
