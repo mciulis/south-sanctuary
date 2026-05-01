@@ -40,9 +40,24 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
         >
           {headline2}
         </h1>
-        <p className="mt-8 text-[11px] tracking-[0.3em] text-white font-medium uppercase">
-          Coming May 2026
-        </p>
+        <div className="mt-8 flex gap-6">
+          <a
+            href="https://www.zillow.com/homedetails/230-S-Canby-St-Portland-OR-97219/53834795_zpid/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
+          >
+            View on Zillow
+          </a>
+          <a
+            href="https://www.redfin.com/OR/Portland/230-S-Canby-St-97219/home/26390460"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
+          >
+            View on Redfin
+          </a>
+        </div>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
