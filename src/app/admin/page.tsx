@@ -79,7 +79,7 @@ export default function AdminPage() {
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              {t === "estate" ? "Estate Sale" : t === "gallery" ? "Gallery" : t === "records" ? "Records" : t === "people" ? "People" : t === "settings" ? "Settings" : "Homepage"}
+              {t === "estate" ? "Estate Sale" : t === "gallery" ? "Gallery" : t === "records" ? "Records" : t === "people" ? "Reservations" : t === "settings" ? "Settings" : "Homepage"}
             </button>
           ))}
         </div>

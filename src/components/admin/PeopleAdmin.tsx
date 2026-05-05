@@ -3,13 +3,20 @@
 import { useEffect, useState } from "react";
 
 type Status = "pending" | "confirmed" | "cancelled" | "withdrawn";
+type ViewMode = "person" | "item";
+type ItemGrouping = "none" | "brand" | "room";
 
-interface ItemReservation {
+interface Reservation {
   id: string;
   product_id: number;
-  item_name: string;
-  status: Status;
+  product_name: string;
+  product_brand: string | null;
+  product_room: string | null;
+  buyer_name: string;
+  buyer_email: string;
+  buyer_phone: string | null;
   message: string | null;
+  status: Status;
   created_at: string;
   waitlistPosition: number | null;
   waitlistTotal: number;
@@ -19,8 +26,16 @@ interface Buyer {
   email: string;
   name: string;
   phone: string | null;
-  items: ItemReservation[];
+  items: Reservation[];
   notes: string;
+}
+
+interface ProductGroup {
+  product_id: number;
+  product_name: string;
+  product_brand: string | null;
+  product_room: string | null;
+  reservations: Reservation[];
 }
 
 const statusStyle: Record<string, string> = {
@@ -30,9 +45,50 @@ const statusStyle: Record<string, string> = {
   withdrawn: "bg-orange-100 text-orange-700",
 };
 
+function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
+  return (
+    <div className="flex gap-1 bg-gray-100 p-1 rounded">
+      {(["person", "item"] as ViewMode[]).map(v => (
+        <button
+          key={v}
+          onClick={() => onChange(v)}
+          className={`px-3 py-1 text-xs tracking-wide rounded transition-colors ${
+            view === v ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          {v === "person" ? "By Person" : "By Item"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function GroupingToggle({ grouping, onChange }: { grouping: ItemGrouping; onChange: (g: ItemGrouping) => void }) {
+  return (
+    <div className="flex gap-1 bg-gray-100 p-1 rounded">
+      {(["none", "brand", "room"] as ItemGrouping[]).map(g => (
+        <button
+          key={g}
+          onClick={() => onChange(g)}
+          className={`px-3 py-1 text-xs tracking-wide rounded transition-colors ${
+            grouping === g ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          {g === "none" ? "All" : g === "brand" ? "By Brand" : "By Room"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function PeopleAdmin() {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<ViewMode>("person");
+  const [grouping, setGrouping] = useState<ItemGrouping>("none");
+
+  // Person view state
   const [editingEmail, setEditingEmail] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
   const [savingContact, setSavingContact] = useState(false);
@@ -46,71 +102,78 @@ export default function PeopleAdmin() {
       fetch("/api/admin/buyer-notes"),
     ]);
 
-    const reservations: any[] = await reservationsRes.json();
+    const raw: any[] = await reservationsRes.json();
     const notes = await notesRes.json();
 
     const notesMap = new Map<string, string>(
       (notes ?? []).map((n: any) => [n.buyer_email, n.notes])
     );
 
-    // Build waitlist positions: for each product, rank active reservations by created_at
+    // Compute waitlist positions per product (pending + confirmed only)
     const activeStatuses = new Set(["pending", "confirmed"]);
-    const productQueues = new Map<number, string[]>(); // product_id -> [reservation_id, ...] asc
-    const activeReservations = reservations
+    const productQueues = new Map<number, string[]>();
+    const active = raw
       .filter(r => activeStatuses.has(r.status))
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-    for (const r of activeReservations) {
+    for (const r of active) {
       if (!productQueues.has(r.product_id)) productQueues.set(r.product_id, []);
       productQueues.get(r.product_id)!.push(r.id);
     }
 
+    const enriched: Reservation[] = raw
+      .filter(r => !r.buyer_name?.toLowerCase().includes("test"))
+      .map(r => {
+        const queue = productQueues.get(r.product_id) ?? [];
+        const posIdx = queue.indexOf(r.id);
+        return {
+          id: r.id,
+          product_id: r.product_id,
+          product_name: r.product_name,
+          product_brand: r.product_brand,
+          product_room: r.product_room,
+          buyer_name: r.buyer_name,
+          buyer_email: r.buyer_email,
+          buyer_phone: r.buyer_phone ?? null,
+          message: r.message,
+          status: r.status as Status,
+          created_at: r.created_at,
+          waitlistPosition: posIdx >= 0 ? posIdx + 1 : null,
+          waitlistTotal: queue.length,
+        };
+      });
+
+    setReservations(enriched);
+
+    // Build buyer map
     const buyerMap = new Map<string, Buyer>();
-    for (const r of reservations) {
-      if (r.buyer_name?.toLowerCase().includes("test")) continue;
-      const email = r.buyer_email;
-      if (!buyerMap.has(email)) {
-        buyerMap.set(email, {
-          email,
+    for (const r of enriched) {
+      if (!buyerMap.has(r.buyer_email)) {
+        buyerMap.set(r.buyer_email, {
+          email: r.buyer_email,
           name: r.buyer_name,
-          phone: r.buyer_phone ?? null,
+          phone: r.buyer_phone,
           items: [],
-          notes: notesMap.get(email) ?? "",
+          notes: notesMap.get(r.buyer_email) ?? "",
         });
       }
-
-      const queue = productQueues.get(r.product_id) ?? [];
-      const posIdx = queue.indexOf(r.id);
-      buyerMap.get(email)!.items.push({
-        id: r.id,
-        product_id: r.product_id,
-        item_name: r.product_name ?? "Unknown",
-        status: r.status as Status,
-        message: r.message,
-        created_at: r.created_at,
-        waitlistPosition: posIdx >= 0 ? posIdx + 1 : null,
-        waitlistTotal: queue.length,
-      });
+      buyerMap.get(r.buyer_email)!.items.push(r);
     }
-
     const sorted = Array.from(buyerMap.values()).sort((a, b) => {
       const aLatest = Math.max(...a.items.map(i => new Date(i.created_at).getTime()));
       const bLatest = Math.max(...b.items.map(i => new Date(i.created_at).getTime()));
       return bLatest - aLatest;
     });
-
     setBuyers(sorted);
     setLoading(false);
   }
 
-  async function updateItemStatus(reservationId: string, status: Status) {
+  async function updateStatus(reservationId: string, status: Status) {
     setUpdatingItem(reservationId);
     await fetch(`/api/admin/reservations/${reservationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    // Reload to recompute waitlist positions
     await loadData();
     setUpdatingItem(null);
   }
@@ -126,169 +189,278 @@ export default function PeopleAdmin() {
   async function saveContact(oldEmail: string) {
     setSavingContact(true);
     const { name, email: newEmail, phone } = editForm;
-
     await fetch("/api/admin/buyers", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ oldEmail, name, email: newEmail, phone }),
     });
-
     setBuyers(prev =>
-      prev.map(b =>
-        b.email === oldEmail ? { ...b, name, email: newEmail, phone: phone || null } : b
-      )
+      prev.map(b => b.email === oldEmail ? { ...b, name, email: newEmail, phone: phone || null } : b)
     );
     setEditingEmail(null);
     setSavingContact(false);
   }
 
+  // Build product groups for item view
+  function buildProductGroups(): ProductGroup[] {
+    const map = new Map<number, ProductGroup>();
+    const active = reservations.filter(r => r.status === "pending" || r.status === "confirmed");
+    const byCreated = [...active].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    for (const r of byCreated) {
+      if (!map.has(r.product_id)) {
+        map.set(r.product_id, {
+          product_id: r.product_id,
+          product_name: r.product_name,
+          product_brand: r.product_brand,
+          product_room: r.product_room,
+          reservations: [],
+        });
+      }
+      map.get(r.product_id)!.reservations.push(r);
+    }
+    return Array.from(map.values()).sort((a, b) => a.product_name.localeCompare(b.product_name));
+  }
+
+  function groupProducts(groups: ProductGroup[]): { label: string; items: ProductGroup[] }[] {
+    if (grouping === "none") return [{ label: "", items: groups }];
+    const buckets = new Map<string, ProductGroup[]>();
+    for (const g of groups) {
+      const key = (grouping === "brand" ? g.product_brand : g.product_room) ?? "—";
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(g);
+    }
+    return Array.from(buckets.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, items]) => ({ label, items }));
+  }
+
   if (loading) return <p className="text-sm text-gray-400">Loading...</p>;
-  if (buyers.length === 0) return <p className="text-sm text-gray-400">No requests yet.</p>;
+  if (reservations.length === 0) return <p className="text-sm text-gray-400">No requests yet.</p>;
+
+  const productGroups = buildProductGroups();
+  const groupedProducts = groupProducts(productGroups);
 
   return (
-    <div className="space-y-4">
-      <p className="text-xs text-gray-400 uppercase tracking-widest mb-6">
-        {buyers.length} people
-      </p>
-      <div className="space-y-4">
-        {buyers.map(buyer => (
-          <div key={buyer.email} className="border border-gray-200 bg-white rounded p-5 space-y-4">
+    <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <ViewToggle view={view} onChange={setView} />
+        {view === "item" && <GroupingToggle grouping={grouping} onChange={setGrouping} />}
+        <p className="text-xs text-gray-400 ml-auto">
+          {view === "person" ? `${buyers.length} people` : `${productGroups.length} items`}
+        </p>
+      </div>
 
-            {/* Contact info */}
-            {editingEmail === buyer.email ? (
-              <div className="space-y-2">
-                <input
-                  className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
-                  value={editForm.name}
-                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Name"
-                />
-                <input
-                  className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
-                  value={editForm.email}
-                  onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
-                  placeholder="Email"
-                />
-                <input
-                  className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
-                  value={editForm.phone}
-                  onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
-                  placeholder="Phone (optional)"
-                />
-                <div className="flex gap-2 pt-1">
+      {/* By Person view */}
+      {view === "person" && (
+        <div className="space-y-4">
+          {buyers.map(buyer => (
+            <div key={buyer.email} className="border border-gray-200 bg-white rounded p-5 space-y-4">
+              {editingEmail === buyer.email ? (
+                <div className="space-y-2">
+                  <input
+                    className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+                    value={editForm.name}
+                    onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="Name"
+                  />
+                  <input
+                    className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+                    value={editForm.email}
+                    onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                    placeholder="Email"
+                  />
+                  <input
+                    className="w-full border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:border-gray-600"
+                    value={editForm.phone}
+                    onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="Phone (optional)"
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={() => saveContact(buyer.email)}
+                      disabled={savingContact}
+                      className="text-[11px] tracking-wide uppercase px-3 py-1.5 bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-40 transition-colors"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingEmail(null)}
+                      className="text-[11px] tracking-wide uppercase px-3 py-1.5 border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{buyer.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      <a href={`mailto:${buyer.email}`} className="hover:underline">{buyer.email}</a>
+                      {buyer.phone && (
+                        <span> · <a href={`tel:${buyer.phone}`} className="hover:underline">{buyer.phone}</a></span>
+                      )}
+                    </p>
+                  </div>
                   <button
-                    onClick={() => saveContact(buyer.email)}
-                    disabled={savingContact}
-                    className="text-[11px] tracking-wide uppercase px-3 py-1.5 bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-40 transition-colors"
+                    onClick={() => {
+                      setEditForm({ name: buyer.name, email: buyer.email, phone: buyer.phone ?? "" });
+                      setEditingEmail(buyer.email);
+                    }}
+                    className="text-[11px] tracking-wide uppercase text-gray-400 hover:text-gray-700 transition-colors shrink-0"
                   >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingEmail(null)}
-                    className="text-[11px] tracking-wide uppercase px-3 py-1.5 border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
+                    Edit
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-800">{buyer.name}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    <a href={`mailto:${buyer.email}`} className="hover:underline">{buyer.email}</a>
-                    {buyer.phone && (
-                      <span> · <a href={`tel:${buyer.phone}`} className="hover:underline">{buyer.phone}</a></span>
-                    )}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setEditForm({ name: buyer.name, email: buyer.email, phone: buyer.phone ?? "" });
-                    setEditingEmail(buyer.email);
+              )}
+
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Notes</p>
+                <textarea
+                  className="w-full border border-gray-200 text-sm px-3 py-2 text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-400 resize-none transition-colors"
+                  rows={2}
+                  defaultValue={buyer.notes}
+                  placeholder="Add notes..."
+                  onBlur={e => {
+                    const val = e.target.value;
+                    setBuyers(prev => prev.map(b => b.email === buyer.email ? { ...b, notes: val } : b));
+                    saveNotes(buyer.email, val);
                   }}
-                  className="text-[11px] tracking-wide uppercase text-gray-400 hover:text-gray-700 transition-colors shrink-0"
-                >
-                  Edit
-                </button>
+                />
               </div>
-            )}
 
-            {/* Notes */}
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Notes</p>
-              <textarea
-                className="w-full border border-gray-200 text-sm px-3 py-2 text-gray-700 placeholder-gray-300 focus:outline-none focus:border-gray-400 resize-none transition-colors"
-                rows={2}
-                defaultValue={buyer.notes}
-                placeholder="Add notes..."
-                onBlur={e => {
-                  const val = e.target.value;
-                  setBuyers(prev => prev.map(b => b.email === buyer.email ? { ...b, notes: val } : b));
-                  saveNotes(buyer.email, val);
-                }}
-              />
-            </div>
-
-            {/* Items */}
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Items</p>
-              <div className="space-y-0">
-                {buyer.items.map(item => (
-                  <div key={item.id} className="flex items-center justify-between gap-4 py-2.5 border-t border-gray-100 first:border-t-0">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-800">{item.item_name}</p>
-                      {item.message && (
-                        <p className="text-xs text-gray-400 italic mt-0.5 truncate">"{item.message}"</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {item.waitlistPosition !== null && (
-                        <span className="text-[10px] text-gray-400 tabular-nums">
-                          #{item.waitlistPosition}{item.waitlistTotal > 1 ? ` of ${item.waitlistTotal}` : ""}
-                        </span>
-                      )}
-                      <span className={`text-[10px] tracking-wide uppercase px-2 py-0.5 rounded ${statusStyle[item.status] ?? "bg-gray-100 text-gray-600"}`}>
-                        {item.status}
-                      </span>
-                      <div className="flex gap-1">
-                        {item.status !== "confirmed" && item.status !== "withdrawn" && item.status !== "cancelled" && (
-                          <button
-                            onClick={() => updateItemStatus(item.id, "confirmed")}
-                            disabled={updatingItem === item.id}
-                            className="text-[10px] tracking-wide uppercase px-2 py-1 border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors"
-                          >
-                            Confirm
-                          </button>
-                        )}
-                        {item.status !== "withdrawn" && (
-                          <button
-                            onClick={() => updateItemStatus(item.id, "withdrawn")}
-                            disabled={updatingItem === item.id}
-                            className="text-[10px] tracking-wide uppercase px-2 py-1 border border-orange-400 text-orange-600 hover:bg-orange-50 disabled:opacity-40 transition-colors"
-                          >
-                            Remove
-                          </button>
-                        )}
-                        {item.status === "withdrawn" && (
-                          <button
-                            onClick={() => updateItemStatus(item.id, "pending")}
-                            disabled={updatingItem === item.id}
-                            className="text-[10px] tracking-wide uppercase px-2 py-1 border border-yellow-400 text-yellow-700 hover:bg-yellow-50 disabled:opacity-40 transition-colors"
-                          >
-                            Re-add
-                          </button>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Items</p>
+                <div>
+                  {buyer.items.map(item => (
+                    <div key={item.id} className="flex items-center justify-between gap-4 py-2.5 border-t border-gray-100 first:border-t-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-800">{item.product_name}</p>
+                        {item.message && (
+                          <p className="text-xs text-gray-400 italic mt-0.5 truncate">"{item.message}"</p>
                         )}
                       </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.waitlistPosition !== null && (
+                          <span className="text-[10px] text-gray-400 tabular-nums">
+                            #{item.waitlistPosition}{item.waitlistTotal > 1 ? ` of ${item.waitlistTotal}` : ""}
+                          </span>
+                        )}
+                        <span className={`text-[10px] tracking-wide uppercase px-2 py-0.5 rounded ${statusStyle[item.status] ?? "bg-gray-100 text-gray-600"}`}>
+                          {item.status}
+                        </span>
+                        <StatusButtons id={item.id} status={item.status} updating={updatingItem} onUpdate={updateStatus} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* By Item view */}
+      {view === "item" && (
+        <div className="space-y-6">
+          {groupedProducts.map(({ label, items }) => (
+            <div key={label}>
+              {label && (
+                <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3 pb-2 border-b border-gray-200">
+                  {label}
+                </p>
+              )}
+              <div className="space-y-3">
+                {items.map(group => (
+                  <div key={group.product_id} className="border border-gray-200 bg-white rounded p-5">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{group.product_name}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5 space-x-2">
+                          {group.product_brand && <span>{group.product_brand}</span>}
+                          {group.product_brand && group.product_room && <span>·</span>}
+                          {group.product_room && <span>{group.product_room}</span>}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-gray-400 shrink-0">
+                        {group.reservations.length} request{group.reservations.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div>
+                      {group.reservations.map((r, idx) => (
+                        <div key={r.id} className="flex items-center justify-between gap-4 py-2.5 border-t border-gray-100 first:border-t-0">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-800">
+                              <span className="text-[10px] text-gray-400 mr-1.5">#{idx + 1}</span>
+                              {r.buyer_name}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              <a href={`mailto:${r.buyer_email}`} className="hover:underline">{r.buyer_email}</a>
+                              {r.buyer_phone && <span> · {r.buyer_phone}</span>}
+                            </p>
+                            {r.message && (
+                              <p className="text-xs text-gray-400 italic mt-0.5">"{r.message}"</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`text-[10px] tracking-wide uppercase px-2 py-0.5 rounded ${statusStyle[r.status] ?? "bg-gray-100 text-gray-600"}`}>
+                              {r.status}
+                            </span>
+                            <StatusButtons id={r.id} status={r.status} updating={updatingItem} onUpdate={updateStatus} />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-          </div>
-        ))}
-      </div>
+function StatusButtons({
+  id, status, updating, onUpdate,
+}: {
+  id: string;
+  status: Status;
+  updating: string | null;
+  onUpdate: (id: string, status: Status) => void;
+}) {
+  const disabled = updating === id;
+  return (
+    <div className="flex gap-1">
+      {status !== "confirmed" && status !== "withdrawn" && status !== "cancelled" && (
+        <button
+          onClick={() => onUpdate(id, "confirmed")}
+          disabled={disabled}
+          className="text-[10px] tracking-wide uppercase px-2 py-1 border border-green-600 text-green-700 hover:bg-green-50 disabled:opacity-40 transition-colors"
+        >
+          Confirm
+        </button>
+      )}
+      {status !== "cancelled" && status !== "withdrawn" && (
+        <button
+          onClick={() => onUpdate(id, "cancelled")}
+          disabled={disabled}
+          className="text-[10px] tracking-wide uppercase px-2 py-1 border border-gray-300 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          Cancel
+        </button>
+      )}
+      {status === "cancelled" && (
+        <button
+          onClick={() => onUpdate(id, "pending")}
+          disabled={disabled}
+          className="text-[10px] tracking-wide uppercase px-2 py-1 border border-yellow-400 text-yellow-700 hover:bg-yellow-50 disabled:opacity-40 transition-colors"
+        >
+          Reopen
+        </button>
+      )}
     </div>
   );
 }
