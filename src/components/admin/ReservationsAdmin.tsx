@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 interface Reservation {
   id: string;
@@ -27,23 +26,21 @@ export default function ReservationsAdmin() {
   const [updating, setUpdating] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase
-      .from("reservations")
-      .select("*, products(name)")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        const rows = (data ?? []).map((r: any) => ({
-          ...r,
-          product_name: r.products?.name ?? "Unknown",
-        }));
-        setReservations(rows);
+    fetch("/api/admin/reservations")
+      .then((r) => r.json())
+      .then((data) => {
+        setReservations(data);
         setLoading(false);
       });
   }, []);
 
   async function updateStatus(id: string, status: string) {
     setUpdating(id);
-    await supabase.from("reservations").update({ status }).eq("id", id);
+    await fetch(`/api/admin/reservations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
     setReservations((prev) =>
       prev.map((r) => (r.id === id ? { ...r, status } : r))
     );

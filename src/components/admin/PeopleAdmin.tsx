@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 type Status = "pending" | "confirmed" | "cancelled" | "withdrawn";
 
@@ -39,14 +38,13 @@ export default function PeopleAdmin() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [{ data: reservations }, { data: notes }] = await Promise.all([
-      supabase
-        .from("reservations")
-        .select("id, buyer_email, buyer_name, buyer_phone, status, message, created_at, products(name)")
-        .not("buyer_name", "ilike", "%test%")
-        .order("created_at", { ascending: true }),
-      supabase.from("buyer_notes").select("buyer_email, notes"),
+    const [reservationsRes, notesRes] = await Promise.all([
+      fetch("/api/admin/reservations"),
+      fetch("/api/admin/buyer-notes"),
     ]);
+
+    const reservations = await reservationsRes.json();
+    const notes = await notesRes.json();
 
     const notesMap = new Map<string, string>(
       (notes ?? []).map((n: any) => [n.buyer_email, n.notes])
@@ -54,6 +52,7 @@ export default function PeopleAdmin() {
 
     const buyerMap = new Map<string, Buyer>();
     for (const r of reservations ?? []) {
+      if (r.buyer_name?.toLowerCase().includes("test")) continue;
       const email = r.buyer_email;
       if (!buyerMap.has(email)) {
         buyerMap.set(email, {
@@ -66,7 +65,7 @@ export default function PeopleAdmin() {
       }
       buyerMap.get(email)!.items.push({
         id: r.id,
-        item_name: (r.products as any)?.name ?? "Unknown",
+        item_name: r.product_name ?? "Unknown",
         status: r.status as Status,
         message: r.message,
         created_at: r.created_at,
@@ -86,7 +85,11 @@ export default function PeopleAdmin() {
 
   async function updateItemStatus(reservationId: string, status: Status) {
     setUpdatingItem(reservationId);
-    await supabase.from("reservations").update({ status }).eq("id", reservationId);
+    await fetch(`/api/admin/reservations/${reservationId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
     setBuyers(prev =>
       prev.map(b => ({
         ...b,
@@ -97,27 +100,22 @@ export default function PeopleAdmin() {
   }
 
   async function saveNotes(email: string, notes: string) {
-    await supabase
-      .from("buyer_notes")
-      .upsert({ buyer_email: email, notes, updated_at: new Date().toISOString() });
+    await fetch("/api/admin/buyer-notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ buyer_email: email, notes }),
+    });
   }
 
   async function saveContact(oldEmail: string) {
     setSavingContact(true);
     const { name, email: newEmail, phone } = editForm;
 
-    await supabase
-      .from("reservations")
-      .update({ buyer_name: name, buyer_email: newEmail, buyer_phone: phone || null })
-      .eq("buyer_email", oldEmail);
-
-    if (newEmail !== oldEmail) {
-      const currentNotes = buyers.find(b => b.email === oldEmail)?.notes ?? "";
-      await supabase.from("buyer_notes").delete().eq("buyer_email", oldEmail);
-      if (currentNotes) {
-        await supabase.from("buyer_notes").insert({ buyer_email: newEmail, notes: currentNotes });
-      }
-    }
+    await fetch("/api/admin/buyers", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oldEmail, name, email: newEmail, phone }),
+    });
 
     setBuyers(prev =>
       prev.map(b =>
