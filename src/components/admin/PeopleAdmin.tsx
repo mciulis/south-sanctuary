@@ -6,10 +6,13 @@ type Status = "pending" | "confirmed" | "cancelled" | "withdrawn";
 
 interface ItemReservation {
   id: string;
+  product_id: number;
   item_name: string;
   status: Status;
   message: string | null;
   created_at: string;
+  waitlistPosition: number | null;
+  waitlistTotal: number;
 }
 
 interface Buyer {
@@ -43,15 +46,27 @@ export default function PeopleAdmin() {
       fetch("/api/admin/buyer-notes"),
     ]);
 
-    const reservations = await reservationsRes.json();
+    const reservations: any[] = await reservationsRes.json();
     const notes = await notesRes.json();
 
     const notesMap = new Map<string, string>(
       (notes ?? []).map((n: any) => [n.buyer_email, n.notes])
     );
 
+    // Build waitlist positions: for each product, rank active reservations by created_at
+    const activeStatuses = new Set(["pending", "confirmed"]);
+    const productQueues = new Map<number, string[]>(); // product_id -> [reservation_id, ...] asc
+    const activeReservations = reservations
+      .filter(r => activeStatuses.has(r.status))
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    for (const r of activeReservations) {
+      if (!productQueues.has(r.product_id)) productQueues.set(r.product_id, []);
+      productQueues.get(r.product_id)!.push(r.id);
+    }
+
     const buyerMap = new Map<string, Buyer>();
-    for (const r of reservations ?? []) {
+    for (const r of reservations) {
       if (r.buyer_name?.toLowerCase().includes("test")) continue;
       const email = r.buyer_email;
       if (!buyerMap.has(email)) {
@@ -63,16 +78,21 @@ export default function PeopleAdmin() {
           notes: notesMap.get(email) ?? "",
         });
       }
+
+      const queue = productQueues.get(r.product_id) ?? [];
+      const posIdx = queue.indexOf(r.id);
       buyerMap.get(email)!.items.push({
         id: r.id,
+        product_id: r.product_id,
         item_name: r.product_name ?? "Unknown",
         status: r.status as Status,
         message: r.message,
         created_at: r.created_at,
+        waitlistPosition: posIdx >= 0 ? posIdx + 1 : null,
+        waitlistTotal: queue.length,
       });
     }
 
-    // Sort by most recent activity
     const sorted = Array.from(buyerMap.values()).sort((a, b) => {
       const aLatest = Math.max(...a.items.map(i => new Date(i.created_at).getTime()));
       const bLatest = Math.max(...b.items.map(i => new Date(i.created_at).getTime()));
@@ -90,12 +110,8 @@ export default function PeopleAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    setBuyers(prev =>
-      prev.map(b => ({
-        ...b,
-        items: b.items.map(i => i.id === reservationId ? { ...i, status } : i),
-      }))
-    );
+    // Reload to recompute waitlist positions
+    await loadData();
     setUpdatingItem(null);
   }
 
@@ -227,6 +243,11 @@ export default function PeopleAdmin() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
+                      {item.waitlistPosition !== null && (
+                        <span className="text-[10px] text-gray-400 tabular-nums">
+                          #{item.waitlistPosition}{item.waitlistTotal > 1 ? ` of ${item.waitlistTotal}` : ""}
+                        </span>
+                      )}
                       <span className={`text-[10px] tracking-wide uppercase px-2 py-0.5 rounded ${statusStyle[item.status] ?? "bg-gray-100 text-gray-600"}`}>
                         {item.status}
                       </span>
