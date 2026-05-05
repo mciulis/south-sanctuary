@@ -59,6 +59,7 @@ export default function ReserveForm({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        productId,
         productName,
         unitsRequested: quantity,
         buyerName: form.buyer_name,
