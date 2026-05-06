@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
         <li>${productName}${quantityNote} — ${positionText}</li>
       </ul>
 
-      <p>Our estimated pickup window is May 25–29. If anything changes, we'll let you know right away. As that date approaches, we'll reach out to confirm timing.</p>
+      <p>This is an automated response, but please feel free to reply with any questions — we're happy to help.</p>
+
+      <p>We're estimating items will be available for pickup beginning Friday, May 15. As that date approaches, we'll reach out to confirm timing.</p>
 
       <p>Looking forward to connecting soon.</p>
 
