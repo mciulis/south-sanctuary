@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   // Notify Michael
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "mike@southsanctuarypdx.com",
     to: process.env.NOTIFICATION_EMAIL!,
     subject: `New item request — ${productName}`,
     html: `
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
   // Confirmation to buyer
   await resend.emails.send({
-    from: "onboarding@resend.dev",
+    from: "mike@southsanctuarypdx.com",
     replyTo: [process.env.NOTIFICATION_EMAIL!],
     to: buyerEmail,
     subject: "Your request — South Sanctuary Estate Sale",
