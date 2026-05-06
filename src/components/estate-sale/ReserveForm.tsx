@@ -55,7 +55,8 @@ export default function ReserveForm({
       return;
     }
 
-    await fetch("/api/notify-reservation", {
+    // Fire and forget — don't block form completion on email sending
+    fetch("/api/notify-reservation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
