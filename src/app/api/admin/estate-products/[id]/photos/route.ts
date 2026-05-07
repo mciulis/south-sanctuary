@@ -51,14 +51,13 @@ export async function POST(
   const timestamp = Date.now();
 
   for (const [index, file] of files.entries()) {
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const filename = `${productId}/${timestamp}-${index}.${ext}`;
+    const filename = `${productId}/${timestamp}-${index}.jpg`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from("products")
       .upload(filename, buffer, {
-        contentType: file.type || "application/octet-stream",
+        contentType: "image/jpeg",
         upsert: false,
       });
 

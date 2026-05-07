@@ -114,6 +114,36 @@ function SortablePhoto({
   );
 }
 
+const MAX_DIMENSION = 1600;
+const JPEG_QUALITY = 0.85;
+
+function resizeForUpload(file: File): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const { width, height } = img;
+      let w = width;
+      let h = height;
+      if (w > MAX_DIMENSION || h > MAX_DIMENSION) {
+        if (w >= h) { h = Math.round(h * MAX_DIMENSION / w); w = MAX_DIMENSION; }
+        else { w = Math.round(w * MAX_DIMENSION / h); h = MAX_DIMENSION; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })),
+        "image/jpeg",
+        JPEG_QUALITY,
+      );
+    };
+    img.src = objectUrl;
+  });
+}
+
 export default function ProductPhotoModal({
   product,
   onClose,
@@ -212,7 +242,8 @@ export default function ProductPhotoModal({
     setUploading(true);
     try {
       const formData = new FormData();
-      Array.from(files).forEach((file) => formData.append("files", file));
+      const resized = await Promise.all(Array.from(files).map(resizeForUpload));
+      resized.forEach((file) => formData.append("files", file));
 
       const result = await parseApiResponse<{ images: ProductImage[]; main_photo_filename: string | null }>(
         await fetch(`/api/admin/estate-products/${product.id}/photos`, {
