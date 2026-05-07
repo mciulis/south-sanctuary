@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
 type Status = "pending" | "confirmed" | "cancelled" | "withdrawn";
-type ViewMode = "person" | "item";
+type ViewMode = "summary" | "person" | "item";
 type ItemGrouping = "none" | "brand" | "room";
 
 interface Reservation {
@@ -21,6 +23,16 @@ interface Reservation {
   units_requested: number;
   waitlistPosition: number | null;
   waitlistTotal: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  sale_price: string | null;
+  main_photo_filename: string | null;
+  brand: string | null;
+  room: string | null;
+  status: string;
 }
 
 interface Buyer {
@@ -46,10 +58,21 @@ const statusStyle: Record<string, string> = {
   withdrawn: "bg-orange-100 text-orange-700",
 };
 
+function photoUrl(filename: string | null): string | null {
+  if (!filename) return null;
+  return `${SUPABASE_URL}/storage/v1/object/public/products/${filename}`;
+}
+
+function fmt(price: string | number | null): string {
+  if (price == null) return "—";
+  const n = typeof price === "string" ? parseFloat(price) : price;
+  return isNaN(n) ? "—" : `$${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
   return (
     <div className="flex gap-1 bg-gray-100 p-1 rounded">
-      {(["person", "item"] as ViewMode[]).map(v => (
+      {(["summary", "person", "item"] as ViewMode[]).map(v => (
         <button
           key={v}
           onClick={() => onChange(v)}
@@ -57,7 +80,7 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
             view === v ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          {v === "person" ? "By Person" : "By Item"}
+          {v === "summary" ? "Summary" : v === "person" ? "By Person" : "By Item"}
         </button>
       ))}
     </div>
@@ -84,9 +107,10 @@ function GroupingToggle({ grouping, onChange }: { grouping: ItemGrouping; onChan
 
 export default function PeopleAdmin() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<ViewMode>("person");
+  const [view, setView] = useState<ViewMode>("summary");
   const [grouping, setGrouping] = useState<ItemGrouping>("none");
 
   // Person view state
@@ -98,19 +122,20 @@ export default function PeopleAdmin() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [reservationsRes, notesRes] = await Promise.all([
+    const [reservationsRes, notesRes, productsRes] = await Promise.all([
       fetch("/api/admin/reservations"),
       fetch("/api/admin/buyer-notes"),
+      fetch("/api/admin/products"),
     ]);
 
     const raw: any[] = await reservationsRes.json();
     const notes = await notesRes.json();
+    const allProducts: Product[] = await productsRes.json();
 
     const notesMap = new Map<string, string>(
       (notes ?? []).map((n: any) => [n.buyer_email, n.notes])
     );
 
-    // Compute waitlist positions per product (pending + confirmed only)
     const activeStatuses = new Set(["pending", "confirmed"]);
     const productQueues = new Map<number, string[]>();
     const active = raw
@@ -145,8 +170,8 @@ export default function PeopleAdmin() {
       });
 
     setReservations(enriched);
+    setProducts(allProducts);
 
-    // Build buyer map
     const buyerMap = new Map<string, Buyer>();
     for (const r of enriched) {
       if (!buyerMap.has(r.buyer_email)) {
@@ -206,8 +231,8 @@ export default function PeopleAdmin() {
   // Build product groups for item view
   function buildProductGroups(): ProductGroup[] {
     const map = new Map<number, ProductGroup>();
-    const active = reservations.filter(r => r.status === "pending" || r.status === "confirmed");
-    const byCreated = [...active].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const activeReservations = reservations.filter(r => r.status === "pending" || r.status === "confirmed");
+    const byCreated = [...activeReservations].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
     for (const r of byCreated) {
       if (!map.has(r.product_id)) {
         map.set(r.product_id, {
@@ -236,11 +261,44 @@ export default function PeopleAdmin() {
       .map(([label, items]) => ({ label, items }));
   }
 
+  // Build summary data
+  function buildSummary() {
+    const activeByProduct = new Map<number, Reservation[]>();
+    const active = reservations
+      .filter(r => r.status === "pending" || r.status === "confirmed")
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    for (const r of active) {
+      if (!activeByProduct.has(r.product_id)) activeByProduct.set(r.product_id, []);
+      activeByProduct.get(r.product_id)!.push(r);
+    }
+
+    const reserved: { product: Product; first: Reservation; otherCount: number }[] = [];
+    const unreserved: Product[] = [];
+
+    for (const p of products) {
+      const queue = activeByProduct.get(p.id) ?? [];
+      if (queue.length > 0) {
+        reserved.push({ product: p, first: queue[0], otherCount: queue.length - 1 });
+      } else {
+        unreserved.push(p);
+      }
+    }
+
+    reserved.sort((a, b) => a.product.name.localeCompare(b.product.name));
+    unreserved.sort((a, b) => a.name.localeCompare(b.name));
+
+    const reservedTotal = reserved.reduce((sum, { product }) => sum + (parseFloat(product.sale_price ?? "0") || 0), 0);
+    const unreservedTotal = unreserved.reduce((sum, p) => sum + (parseFloat(p.sale_price ?? "0") || 0), 0);
+
+    return { reserved, unreserved, reservedTotal, unreservedTotal };
+  }
+
   if (loading) return <p className="text-sm text-gray-400">Loading...</p>;
-  if (reservations.length === 0) return <p className="text-sm text-gray-400">No requests yet.</p>;
+  if (reservations.length === 0 && products.length === 0) return <p className="text-sm text-gray-400">No requests yet.</p>;
 
   const productGroups = buildProductGroups();
   const groupedProducts = groupProducts(productGroups);
+  const { reserved, unreserved, reservedTotal, unreservedTotal } = buildSummary();
 
   return (
     <div className="space-y-6">
@@ -249,9 +307,125 @@ export default function PeopleAdmin() {
         <ViewToggle view={view} onChange={setView} />
         {view === "item" && <GroupingToggle grouping={grouping} onChange={setGrouping} />}
         <p className="text-xs text-gray-400 ml-auto">
-          {view === "person" ? `${buyers.length} people` : `${productGroups.length} items`}
+          {view === "summary"
+            ? `${products.length} items total`
+            : view === "person"
+            ? `${buyers.length} people`
+            : `${productGroups.length} items with requests`}
         </p>
       </div>
+
+      {/* Summary view */}
+      {view === "summary" && (
+        <div className="space-y-10">
+          {/* Reserved section */}
+          <div>
+            <div className="flex items-baseline justify-between mb-3 pb-2 border-b border-gray-200">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                Reserved · {reserved.length} item{reserved.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-sm font-medium text-gray-800">{fmt(reservedTotal)}</p>
+            </div>
+            {reserved.length === 0 ? (
+              <p className="text-sm text-gray-400">No reserved items.</p>
+            ) : (
+              <div className="border border-gray-200 bg-white rounded divide-y divide-gray-100">
+                {reserved.map(({ product, first, otherCount }) => (
+                  <div key={product.id} className="flex items-center gap-4 px-4 py-3">
+                    <div className="w-11 h-11 shrink-0 bg-gray-100 rounded overflow-hidden">
+                      {photoUrl(product.main_photo_filename) ? (
+                        <img
+                          src={photoUrl(product.main_photo_filename)!}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 truncate">{product.name}</p>
+                      {(product.brand || product.room) && (
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {[product.brand, product.room].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-700 tabular-nums w-16 text-right shrink-0">
+                      {fmt(product.sale_price)}
+                    </p>
+                    <div className="w-44 min-w-0 shrink-0">
+                      <p className="text-sm text-gray-800 truncate">{first.buyer_name}</p>
+                      <p className="text-[11px] text-gray-400 truncate">
+                        <a href={`mailto:${first.buyer_email}`} className="hover:underline">
+                          {first.buyer_email}
+                        </a>
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-400 w-16 text-right shrink-0">
+                      {otherCount > 0 ? `+${otherCount} more` : "—"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Unreserved section */}
+          <div>
+            <div className="flex items-baseline justify-between mb-3 pb-2 border-b border-gray-200">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                Unreserved · {unreserved.length} item{unreserved.length !== 1 ? "s" : ""}
+              </p>
+              <p className="text-sm font-medium text-gray-400">{fmt(unreservedTotal)}</p>
+            </div>
+            {unreserved.length === 0 ? (
+              <p className="text-sm text-gray-400">All items are reserved.</p>
+            ) : (
+              <div className="border border-gray-200 bg-white rounded divide-y divide-gray-100">
+                {unreserved.map(product => (
+                  <div key={product.id} className="flex items-center gap-4 px-4 py-3">
+                    <div className="w-11 h-11 shrink-0 bg-gray-100 rounded overflow-hidden">
+                      {photoUrl(product.main_photo_filename) ? (
+                        <img
+                          src={photoUrl(product.main_photo_filename)!}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : null}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-800 truncate">{product.name}</p>
+                      {(product.brand || product.room) && (
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {[product.brand, product.room].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 tabular-nums w-16 text-right shrink-0">
+                      {fmt(product.sale_price)}
+                    </p>
+                    <div className="w-44 shrink-0" />
+                    <div className="w-16 shrink-0" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Grand total */}
+          <div className="flex justify-end border-t border-gray-200 pt-4">
+            <div className="text-right space-y-1">
+              <p className="text-xs text-gray-400">
+                Reserved <span className="font-medium text-gray-700">{fmt(reservedTotal)}</span>
+                <span className="mx-2 text-gray-300">+</span>
+                Unreserved <span className="font-medium text-gray-400">{fmt(unreservedTotal)}</span>
+              </p>
+              <p className="text-sm font-semibold text-gray-800">
+                Total {fmt(reservedTotal + unreservedTotal)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* By Person view */}
       {view === "person" && (
