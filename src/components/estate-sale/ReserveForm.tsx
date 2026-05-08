@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 interface Props {
   productId: number;
   productName: string;
+  salePrice: number | null;
   quantity: number;
   unitsAvailable: number;
   onSuccess: () => void;
@@ -15,6 +16,7 @@ interface Props {
 export default function ReserveForm({
   productId,
   productName,
+  salePrice,
   quantity,
   unitsAvailable,
   onSuccess,
@@ -62,6 +64,7 @@ export default function ReserveForm({
       body: JSON.stringify({
         productId,
         productName,
+        salePrice,
         unitsRequested: quantity,
         buyerName: form.buyer_name,
         buyerEmail: form.buyer_email,

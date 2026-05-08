@@ -137,20 +137,16 @@ export default function PeopleAdmin() {
     );
 
     const activeStatuses = new Set(["pending", "confirmed"]);
-    const productQueues = new Map<number, string[]>();
-    const active = raw
-      .filter(r => activeStatuses.has(r.status))
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    for (const r of active) {
-      if (!productQueues.has(r.product_id)) productQueues.set(r.product_id, []);
-      productQueues.get(r.product_id)!.push(r.id);
+    const waitlistTotals = new Map<number, number>();
+    for (const r of raw) {
+      if (activeStatuses.has(r.status)) {
+        waitlistTotals.set(r.product_id, (waitlistTotals.get(r.product_id) ?? 0) + 1);
+      }
     }
 
     const enriched: Reservation[] = raw
       .filter(r => !r.buyer_name?.toLowerCase().includes("test"))
       .map(r => {
-        const queue = productQueues.get(r.product_id) ?? [];
-        const posIdx = queue.indexOf(r.id);
         return {
           id: r.id,
           product_id: r.product_id,
@@ -164,8 +160,8 @@ export default function PeopleAdmin() {
           status: r.status as Status,
           created_at: r.created_at,
           units_requested: r.units_requested ?? 1,
-          waitlistPosition: posIdx >= 0 ? posIdx + 1 : null,
-          waitlistTotal: queue.length,
+          waitlistPosition: r.waitlist_position ?? null,
+          waitlistTotal: waitlistTotals.get(r.product_id) ?? 0,
         };
       });
 

@@ -273,6 +273,7 @@ export default function ProductDetail({ product, images }: Props) {
         <ReserveForm
           productId={product.id}
           productName={product.full_name}
+          salePrice={product.sale_price ?? null}
           quantity={quantity}
           unitsAvailable={localUnitsAvailable}
           onSuccess={() => {

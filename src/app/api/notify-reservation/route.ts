@@ -4,39 +4,34 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(req: NextRequest) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const { productId, productName, unitsRequested, buyerName, buyerEmail, buyerPhone, message } =
+  const { productId, productName, salePrice, unitsRequested, buyerName, buyerEmail, buyerPhone, message } =
     await req.json();
 
-  // Compute waitlist position
+  // Read waitlist position from the newly inserted reservation
   let position = 1;
   if (productId) {
-    const { data: latest } = await supabaseAdmin
+    const { data: reservation } = await supabaseAdmin
       .from("reservations")
-      .select("created_at")
+      .select("waitlist_position")
       .eq("product_id", productId)
       .eq("buyer_email", buyerEmail)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (latest) {
-      const { count } = await supabaseAdmin
-        .from("reservations")
-        .select("*", { count: "exact", head: true })
-        .eq("product_id", productId)
-        .in("status", ["pending", "confirmed"])
-        .lte("created_at", latest.created_at);
-
-      position = count ?? 1;
-    }
+    position = reservation?.waitlist_position ?? 1;
   }
 
   const firstName = buyerName.trim().split(" ")[0];
-  const positionText = position === 1
-    ? "you're #1 on the waitlist"
-    : `you're #${position} on the waitlist`;
-
   const quantityNote = unitsRequested > 1 ? ` (${unitsRequested} units)` : "";
+  const isFirst = position === 1;
+
+  // Deposit = 25% of sale price, rounded to nearest $10, minimum $10
+  const deposit = salePrice
+    ? Math.max(10, Math.round(salePrice * 0.25 / 10) * 10)
+    : null;
+  const priceDisplay = salePrice ? `$${salePrice.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : null;
+  const depositDisplay = deposit ? `$${deposit}` : null;
 
   // Notify Michael
   await resend.emails.send({
@@ -58,25 +53,29 @@ export async function POST(req: NextRequest) {
     from: "mike@southsanctuarypdx.com",
     replyTo: [process.env.NOTIFICATION_EMAIL!],
     to: buyerEmail,
-    subject: "Your request — South Sanctuary Estate Sale",
-    html: `
+    subject: isFirst
+      ? "Good News — South Sanctuary Estate Sale"
+      : "We've Got You on the List — South Sanctuary Estate Sale",
+    html: isFirst ? `
       <p>Hi ${firstName},</p>
 
-      <p>Thanks so much for expressing interest — we're really glad these pieces are finding good homes.</p>
-
-      <p>Here's where you stand on the item you requested:</p>
+      <p>Thanks for reaching out about our estate sale. Good news, you're first in line for the following item:</p>
 
       <ul>
-        <li>${productName}${quantityNote} — ${positionText}</li>
+        <li>${productName}${quantityNote}${priceDisplay ? ` — ${priceDisplay}` : ""}${depositDisplay ? ` (deposit: ${depositDisplay})` : ""}</li>
       </ul>
 
-      <p>This is an automated response, but please feel free to reply with any questions — we're happy to help.</p>
+      ${depositDisplay ? `<p>To reserve this, please send a deposit of ${depositDisplay} via Venmo to @mciulis. The deposit goes toward your total at pickup. Once you send it, reply to this email with a few dates between May 15 and 22 that work for pickup and we'll confirm one. If we don't receive the deposit within 72 hours, we'll offer the item to the next person. If pickup doesn't happen by May 22, the deposit will be forfeited.</p>` : `<p>We'll be in touch in the next few days with details on next steps, including pickup timing and how to reserve your spot.</p>`}
 
-      <p>We're estimating items will be available for pickup beginning Friday, May 15. As that date approaches, we'll reach out to confirm timing.</p>
+      <p>Mike &amp; Ali<br>southsanctuarypdx.com/estate-sale</p>
+    ` : `
+      <p>Hi ${firstName},</p>
 
-      <p>Looking forward to connecting soon.</p>
+      <p>Thanks for reaching out about our estate sale. We've got you on the list for ${productName}${quantityNote} — you're currently #${position}.</p>
 
-      <p>Mike &amp; Ali</p>
+      <p>Our pickup window is May 15 to 22. If anyone ahead of you isn't able to move forward, we'll be in touch right away with next steps.</p>
+
+      <p>Mike &amp; Ali<br>southsanctuarypdx.com/estate-sale</p>
     `,
   });
 
