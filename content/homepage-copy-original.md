@@ -53,6 +53,6 @@ The soaking tub sits in its own niche, framed by a window to the trees. A floati
 
 ---
 
-## ESTATE SALE / Is Now Available
+## MOVING SALE / Is Now Available
 
 Every piece in this home was chosen deliberately — for its material, its warmth and its relationship to the spaces it would live beside. The full collection is now available, offered fairly to someone who will give it a second home.

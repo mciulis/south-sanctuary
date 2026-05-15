@@ -23,7 +23,7 @@ const SECTION_CONFIG: { id: string; label: string; type: SectionType }[] = [
   { id: "kitchen", label: "The Kitchen", type: "story" },
   { id: "living-room", label: "The Living Room", type: "story" },
   { id: "retreat", label: "The Retreat", type: "story" },
-  { id: "estate-cta", label: "Estate Sale CTA", type: "cta" },
+  { id: "moving-cta", label: "Moving Sale CTA", type: "cta" },
 ];
 
 // ─── Photo replacer ───────────────────────────────────────────────────────────

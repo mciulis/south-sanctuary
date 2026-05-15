@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>South Sanctuary Moving Sale — Emails</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 24px; color: #222; line-height: 1.5; }
+  h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  h2 { font-size: 22px; margin-top: 48px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+  h3 { font-size: 16px; margin-top: 24px; color: #555; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f4f4f4; }
+  blockquote { margin: 12px 0; padding: 12px 20px; background: #f9f9f9; border-left: 4px solid #888; }
+  blockquote p { margin: 8px 0; }
+  ul { margin: 8px 0; padding-left: 24px; }
+  .meta { color: #555; font-size: 14px; margin: 4px 0; }
+  .meta strong { color: #222; }
+  .editor-note { font-style: italic; color: #888; font-size: 14px; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 40px 0; }
+  code { background: #eee; padding: 2px 5px; border-radius: 3px; font-size: 90%; }
+</style>
+</head>
+<body>
+
+<h1>South Sanctuary Moving Sale — Emails</h1>
+
+<p>Five emails total: 3 sent manually by Mike (Announcement, First Look, Next in Line) and 2 sent automatically by the website when a new reservation is submitted (Auto-Confirm Top Pick, Auto-Confirm Waitlisted).</p>
+
+<h3>Placeholders to fill in before sending the manual ones:</h3>
+<ul>
+  <li><code>[Name]</code> — recipient first name</li>
+  <li><code>[Item]</code> / <code>[Item 1]</code>, <code>[Item 2]</code> — item name(s)</li>
+  <li><code>[PRICE]</code> — sale price per item</li>
+  <li><code>[AMOUNT]</code> — deposit per item (25% of sale price, rounded to nearest $10, min $10)</li>
+  <li><code>[TOTAL]</code> — sum of all deposits for that person</li>
+  <li><code>[N]</code> — waitlist position number</li>
+  <li>Venmo handle: <code>@mciulis</code> — attach Mike's Venmo QR Code PDF where noted</li>
+</ul>
+
+<h3>Send timeline:</h3>
+<table>
+  <thead>
+    <tr><th>When</th><th>Email</th><th>Audience</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Fri May 15 (today)</td><td>Announcement</td><td>All 26 reservation holders</td></tr>
+    <tr><td>Fri May 15 (today, after Announcement)</td><td>First Look</td><td>16 #1 buyers — deposit due Tue May 19 noon PT</td></tr>
+    <tr><td>Tue May 19 noon PT</td><td>Next in Line</td><td>#2 on items where #1 didn't pay — deposit due Thu May 21 noon PT</td></tr>
+  </tbody>
+</table>
+
+<h3>Pickup details:</h3>
+<ul>
+  <li>Scheduled waitlist pickup: Friday May 22 or Saturday May 23</li>
+  <li>Open house (walk-in, unclaimed items): Sunday May 24, 1–4pm</li>
+</ul>
+
+<hr>
+
+<h2>1. Announcement</h2>
+<p class="meta"><strong>To:</strong> All 26 reservation holders</p>
+<p class="meta"><strong>When:</strong> Friday May 15</p>
+<p class="meta"><strong>Subject:</strong> Next Steps for Your Items — South Sanctuary Moving Sale</p>
+
+<blockquote>
+<p>Hi [Name],</p>
+<p>Thanks again for expressing interest in our <a href="https://southsanctuarypdx.com/moving-sale">moving sale</a>. Our pickup window is Friday May 22 and Saturday May 23.</p>
+<p>A quick heads-up: a few waitlist positions shifted as we finalized the list.</p>
+<p>You'll hear from us shortly with details on your specific items. If those dates don't work for you, just reply and we're happy to be flexible.</p>
+<p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+</blockquote>
+
+<hr>
+
+<h2>2. First Look</h2>
+<p class="meta"><strong>To:</strong> 16 buyers who are #1 on at least one item</p>
+<p class="meta"><strong>When:</strong> Friday May 15 (after Announcement)</p>
+<p class="meta"><strong>Attach:</strong> Mike's Venmo QR Code for Pmt.pdf</p>
+<p class="meta"><strong>Subject:</strong> You're first in line — South Sanctuary Moving Sale</p>
+
+<blockquote>
+<p>Hi [Name],</p>
+<p>Great news — you're first in line for the items you expressed interest in:</p>
+<ul>
+  <li>[Item 1] — $[PRICE] (deposit: $[AMOUNT])</li>
+  <li>[Item 2] — $[PRICE] (deposit: $[AMOUNT])</li>
+  <li><strong>Total deposit: $[TOTAL]</strong></li>
+</ul>
+<p>To reserve these, please send your deposit via Venmo to @mciulis (QR code attached). The deposit goes toward your total at pickup. Once you send it, reply with a few times that work for pickup on Friday, May 22 or Saturday, May 23 and we'll confirm one. If those dates don't work for you, just reply and we're happy to be flexible.</p>
+<p>Please send the deposit by <strong>Tuesday, May 19 at noon PT</strong>. If we don't hear back by then, we'll offer the items to the next person on the list. If pickup doesn't happen within the agreed timeframe, the deposit will be forfeited.</p>
+<p class="editor-note">[Include the following block only if they're not #1 on every item they expressed interest in:]</p>
+<p>You also expressed interest in the following items. Here's where you currently stand:</p>
+<ul>
+  <li>[Item A] — you're #[N] on the list</li>
+  <li>[Item B] — you're #[N] on the list</li>
+</ul>
+<p>We'll be in touch if any of those become available.</p>
+<p class="editor-note">[End conditional block.]</p>
+<p>If there are other items you're interested in and want to see in person, we're hosting a moving sale open house on Sunday, May 24 from 1-4pm.</p>
+<p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+</blockquote>
+
+<hr>
+
+<h2>3. Next in Line</h2>
+<p class="meta"><strong>To:</strong> Buyers who are #2 on items where #1 didn't pay</p>
+<p class="meta"><strong>When:</strong> Tuesday May 19 around noon PT (after First Look deadline)</p>
+<p class="meta"><strong>Attach:</strong> Mike's Venmo QR Code for Pmt.pdf</p>
+<p class="meta"><strong>Subject:</strong> Your spot just opened up — South Sanctuary Moving Sale</p>
+
+<blockquote>
+<p>Hi [Name],</p>
+<p>The person ahead of you on the list wasn't able to move forward, which means you're now first in line for the following items:</p>
+<ul>
+  <li>[Item 1] — $[PRICE] (deposit: $[AMOUNT])</li>
+  <li>[Item 2] — $[PRICE] (deposit: $[AMOUNT])</li>
+  <li><strong>Total deposit: $[TOTAL]</strong></li>
+</ul>
+<p>To reserve these, please send your deposit via Venmo to @mciulis (QR code attached). The deposit goes toward your total at pickup. Once you send it, reply with a few times that work for pickup on Friday, May 22 or Saturday, May 23 and we'll confirm one. If those dates don't work for you, just reply and we're happy to be flexible.</p>
+<p>Since we're working through the list, please send the deposit by <strong>Thursday, May 21 at noon PT</strong>. If we don't hear back by then, we'll reach out to the next person. If pickup doesn't happen within the agreed timeframe, the deposit will be forfeited.</p>
+<p>If there are other items you're interested in and want to see in person, we're hosting a moving sale open house on Sunday, May 24 from 1-4pm.</p>
+<p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+</blockquote>
+
+<hr>
+
+<h2>4. Auto-Confirm (Top Pick)</h2>
+<p class="meta"><strong>Sent automatically</strong> by the website when a new reservation is submitted and the buyer lands at #1 on the item's waitlist.</p>
+<p class="meta"><strong>Subject:</strong> You're first in line — South Sanctuary Moving Sale</p>
+
+<blockquote>
+<p>Hi [Name],</p>
+<p>Thanks for reaching out about our moving sale. Good news — you're first in line for [Item] — $[PRICE] (deposit: $[AMOUNT]).</p>
+<p>To hold it, please send your deposit via Venmo to @mciulis within 48 hours. The deposit goes toward your total at pickup. Once you send it, reply with a few times that work for pickup and we'll confirm one — pickup needs to happen within 72 hours of your deposit unless otherwise arranged. If we don't receive the deposit within 48 hours, we'll offer the item to the next person.</p>
+<p>If there are other items you're interested in and want to see in person, we're hosting a moving sale open house on Sunday, May 24 from 1-4pm.</p>
+<p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+</blockquote>
+
+<hr>
+
+<h2>5. Auto-Confirm (Waitlisted)</h2>
+<p class="meta"><strong>Sent automatically</strong> by the website when a new reservation is submitted and the buyer lands behind someone on the item's waitlist.</p>
+<p class="meta"><strong>Subject:</strong> You're on the list — South Sanctuary Moving Sale</p>
+
+<blockquote>
+<p>Hi [Name],</p>
+<p>Thanks for reaching out about our moving sale. We've got you on the list for [Item] — you're currently #[N] in line.</p>
+<p>We're working through the list now — if anyone ahead of you isn't able to move forward, we'll be in touch right away with next steps.</p>
+<p>We're also hosting a moving sale open house on Sunday, May 24 from 1-4pm — feel free to stop by to see this item or anything else that catches your eye. Items that haven't been claimed by then will be available.</p>
+<p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+</blockquote>
+
+</body>
+</html>

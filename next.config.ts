@@ -11,6 +11,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/estate-sale",
+        destination: "/moving-sale",
+        permanent: true,
+      },
+      {
+        source: "/estate-sale/:id",
+        destination: "/moving-sale/:id",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

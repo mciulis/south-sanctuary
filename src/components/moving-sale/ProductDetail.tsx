@@ -103,10 +103,10 @@ export default function ProductDetail({ product, images }: Props) {
           {/* Info */}
           <div className="flex flex-col">
             <Link
-              href="/estate-sale"
+              href="/moving-sale"
               className="text-[10px] tracking-[0.22em] text-ss-taupe uppercase mb-8 hover:text-ss-ink transition-colors inline-flex items-center gap-2"
             >
-              ← The Estate Sale
+              ← The Moving Sale
             </Link>
 
             {brand && (

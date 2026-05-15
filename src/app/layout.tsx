@@ -19,7 +19,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "South Sanctuary — 230 S Canby, Portland",
   description:
-    "A peaceful home tucked into the trees at the end of a quiet street. Three bedrooms, 2.5 baths, 850sqft deck, and a curated estate sale.",
+    "A peaceful home tucked into the trees at the end of a quiet street. Three bedrooms, 2.5 baths, 850sqft deck, and a curated moving sale.",
   openGraph: {
     title: "South Sanctuary — 230 S Canby, Portland",
     description: "A peaceful home tucked into the trees.",

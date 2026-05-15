@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import EstateSaleAdmin from "@/components/admin/EstateSaleAdmin";
+import MovingSaleAdmin from "@/components/admin/MovingSaleAdmin";
 import GalleryAdmin from "@/components/admin/GalleryAdmin";
 import HomepageAdmin from "@/components/admin/HomepageAdmin";
 import PeopleAdmin from "@/components/admin/PeopleAdmin";
@@ -15,7 +15,7 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
-  const [tab, setTab] = useState<"estate" | "gallery" | "homepage" | "people" | "records" | "settings">("homepage");
+  const [tab, setTab] = useState<"moving" | "gallery" | "homepage" | "people" | "records" | "settings">("homepage");
 
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
@@ -69,7 +69,7 @@ export default function AdminPage() {
           South Sanctuary — Admin
         </p>
         <div className="flex gap-1">
-          {(["homepage", "gallery", "estate", "records", "people", "settings"] as const).map((t) => (
+          {(["homepage", "gallery", "moving", "records", "people", "settings"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -79,7 +79,7 @@ export default function AdminPage() {
                   : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              {t === "estate" ? "Estate Sale" : t === "gallery" ? "Gallery" : t === "records" ? "Records" : t === "people" ? "Reservations" : t === "settings" ? "Settings" : "Homepage"}
+              {t === "moving" ? "Moving Sale" : t === "gallery" ? "Gallery" : t === "records" ? "Records" : t === "people" ? "Reservations" : t === "settings" ? "Settings" : "Homepage"}
             </button>
           ))}
         </div>
@@ -93,7 +93,7 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="px-6 py-8 max-w-screen-xl mx-auto">
-        {tab === "estate" ? <EstateSaleAdmin /> : tab === "gallery" ? <GalleryAdmin /> : tab === "records" ? <RecordsAdmin /> : tab === "people" ? <PeopleAdmin /> : tab === "settings" ? <SiteSettingsAdmin /> : <HomepageAdmin />}
+        {tab === "moving" ? <MovingSaleAdmin /> : tab === "gallery" ? <GalleryAdmin /> : tab === "records" ? <RecordsAdmin /> : tab === "people" ? <PeopleAdmin /> : tab === "settings" ? <SiteSettingsAdmin /> : <HomepageAdmin />}
       </div>
     </div>
   );

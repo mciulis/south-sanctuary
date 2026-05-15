@@ -1,26 +1,26 @@
 import Link from "next/link";
 import Image from "next/image";
 
-interface EstateCtaContent {
+interface MovingCtaContent {
   headline1?: string;
   headline2?: string;
   body?: string[];
   button_text?: string;
 }
 
-export default function EstateCta({
+export default function MovingCta({
   content = {},
   hideButton = false,
   backgroundImage,
   footnote,
 }: {
-  content?: EstateCtaContent;
+  content?: MovingCtaContent;
   hideButton?: boolean;
   backgroundImage?: string;
   footnote?: string;
 }) {
   const {
-    headline1 = "THE ESTATE SALE",
+    headline1 = "THE MOVING SALE",
     headline2 = "Is Now Open",
     body = ["Every piece in this home was chosen deliberately — for its material, its warmth, its relationship to the room it would live in and the other furniture it would live beside. The full collection is being offered fairly to someone who will give it a second life."],
     button_text = "Browse the Collection",
@@ -61,7 +61,7 @@ export default function EstateCta({
         ))}
         {!hideButton && (
           <Link
-            href="/estate-sale"
+            href="/moving-sale"
             className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
           >
             {button_text}

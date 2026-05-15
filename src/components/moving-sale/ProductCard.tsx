@@ -24,7 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const hasDiscount = effectiveDiscountPct != null && effectiveDiscountPct > 0;
 
   return (
-    <Link href={`/estate-sale/${product.id}`} className="group block">
+    <Link href={`/moving-sale/${product.id}`} className="group block">
       {/* Image */}
       <div className="relative aspect-square bg-ss-cream-dark overflow-hidden mb-3">
         {photoUrl ? (

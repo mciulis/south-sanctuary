@@ -54,28 +54,28 @@ export async function POST(req: NextRequest) {
     replyTo: [process.env.NOTIFICATION_EMAIL!],
     to: buyerEmail,
     subject: isFirst
-      ? "Good News — South Sanctuary Estate Sale"
-      : "We've Got You on the List — South Sanctuary Estate Sale",
+      ? "You're first in line — South Sanctuary Moving Sale"
+      : "You're on the list — South Sanctuary Moving Sale",
     html: isFirst ? `
       <p>Hi ${firstName},</p>
 
-      <p>Thanks for reaching out about our estate sale. Good news, you're first in line for the following item:</p>
+      <p>Thanks for reaching out about our moving sale. Good news — you're first in line for ${productName}${quantityNote}${priceDisplay ? ` — ${priceDisplay}` : ""}${depositDisplay ? ` (deposit: ${depositDisplay})` : ""}.</p>
 
-      <ul>
-        <li>${productName}${quantityNote}${priceDisplay ? ` — ${priceDisplay}` : ""}${depositDisplay ? ` (deposit: ${depositDisplay})` : ""}</li>
-      </ul>
+      ${depositDisplay ? `<p>To hold it, please send your deposit via Venmo to @mciulis within 48 hours. The deposit goes toward your total at pickup. Once you send it, reply to this email with a few times that work for pickup and we'll confirm one — pickup needs to happen within 72 hours of your deposit unless otherwise arranged. If we don't receive the deposit within 48 hours, we'll offer the item to the next person.</p>` : `<p>We'll be in touch in the next few days with details on next steps, including pickup timing and how to reserve your spot.</p>`}
 
-      ${depositDisplay ? `<p>To reserve this, please send a deposit of ${depositDisplay} via Venmo to @mciulis. The deposit goes toward your total at pickup. Once you send it, reply to this email with a few dates between May 15 and 22 that work for pickup and we'll confirm one. If we don't receive the deposit within 72 hours, we'll offer the item to the next person. If pickup doesn't happen by May 22, the deposit will be forfeited.</p>` : `<p>We'll be in touch in the next few days with details on next steps, including pickup timing and how to reserve your spot.</p>`}
+      <p>If there are other items you're interested in and want to see in person, we're hosting a moving sale open house on Sunday, May 24 from 1-4pm.</p>
 
-      <p>Mike &amp; Ali<br>southsanctuarypdx.com/estate-sale</p>
+      <p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
     ` : `
       <p>Hi ${firstName},</p>
 
-      <p>Thanks for reaching out about our estate sale. We've got you on the list for ${productName}${quantityNote} — you're currently #${position}.</p>
+      <p>Thanks for reaching out about our moving sale. We've got you on the list for ${productName}${quantityNote} — you're currently #${position} in line.</p>
 
-      <p>Our pickup window is May 15 to 22. If anyone ahead of you isn't able to move forward, we'll be in touch right away with next steps.</p>
+      <p>We're working through the list now — if anyone ahead of you isn't able to move forward, we'll be in touch right away with next steps.</p>
 
-      <p>Mike &amp; Ali<br>southsanctuarypdx.com/estate-sale</p>
+      <p>We're also hosting a moving sale open house on Sunday, May 24 from 1-4pm — feel free to stop by to see this item or anything else that catches your eye. Items that haven't been claimed by then will be available.</p>
+
+      <p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
     `,
   });
 

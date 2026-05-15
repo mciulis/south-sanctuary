@@ -3,7 +3,7 @@ import HeroSection from "@/components/story/HeroSection";
 import QuoteSection from "@/components/story/QuoteSection";
 import SettingSection from "@/components/story/SettingSection";
 import HomepageStory, { StorySectionData } from "@/components/story/HomepageStory";
-import EstateCta from "@/components/story/EstateCta";
+import MovingCta from "@/components/story/MovingCta";
 
 export const revalidate = 60;
 
@@ -78,7 +78,7 @@ export default async function Home() {
       <QuoteSection content={s.quote} />
       <SettingSection content={s.setting} />
       <HomepageStory sections={storySections} />
-      <EstateCta content={s["estate-cta"]} />
+      <MovingCta content={s["moving-cta"]} />
     </>
   );
 }

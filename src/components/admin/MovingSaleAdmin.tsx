@@ -55,7 +55,7 @@ const BLANK_NEW_PRODUCT = {
   available_by: "",
 };
 
-export default function EstateSaleAdmin() {
+export default function MovingSaleAdmin() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [edits, setEdits] = useState<Record<number, Partial<Product>>>({});
@@ -201,7 +201,7 @@ export default function EstateSaleAdmin() {
     <>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-semibold text-gray-800">
-          Estate Sale
+          Moving Sale
           <span className="ml-2 font-normal text-gray-400">({products.length} items)</span>
         </h2>
         <div className="flex items-center gap-3">

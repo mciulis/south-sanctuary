@@ -1,11 +1,11 @@
 import { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/estate";
-import ProductGrid from "@/components/estate-sale/ProductGrid";
-import EstateCta from "@/components/story/EstateCta";
+import ProductGrid from "@/components/moving-sale/ProductGrid";
+import MovingCta from "@/components/story/MovingCta";
 
 export const metadata: Metadata = {
-  title: "Estate Sale — South Sanctuary",
+  title: "Moving Sale — South Sanctuary",
   description:
     "Every piece in this home was chosen deliberately. The full collection is now available — offered fairly to someone who will give it a second life.",
 };
@@ -26,20 +26,20 @@ async function getProducts(): Promise<Product[]> {
   return data as Product[];
 }
 
-export default async function EstateSalePage() {
+export default async function MovingSalePage() {
   const [products, { data: sectionsData }] = await Promise.all([
     getProducts(),
-    supabase.from("homepage_sections").select("id, content").eq("id", "estate-cta").single(),
+    supabase.from("homepage_sections").select("id, content").eq("id", "moving-cta").single(),
   ]);
 
   return (
     <>
-      {/* Hero — shares content with homepage estate CTA via Supabase */}
+      {/* Hero — shares content with homepage moving CTA via Supabase */}
       <div className="pt-20">
-        <EstateCta
+        <MovingCta
           content={sectionsData?.content}
           hideButton
-          backgroundImage="/images/estate-sale-hero.jpg"
+          backgroundImage="/images/moving-sale-hero.jpg"
           footnote="Available after closing."
         />
       </div>

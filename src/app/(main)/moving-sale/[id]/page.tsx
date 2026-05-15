@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/estate";
-import ProductDetail from "@/components/estate-sale/ProductDetail";
+import ProductDetail from "@/components/moving-sale/ProductDetail";
 
 export const revalidate = 60;
 
@@ -34,7 +34,7 @@ export async function generateMetadata({
   const product = await getProduct(parseInt(id));
   if (!product) return {};
   return {
-    title: `${product.name} — Estate Sale`,
+    title: `${product.name} — Moving Sale`,
     description: product.description ?? undefined,
   };
 }
