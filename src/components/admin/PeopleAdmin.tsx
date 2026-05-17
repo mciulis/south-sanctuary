@@ -1119,6 +1119,7 @@ function SchedulePickupModal({
   onClose: () => void;
   onDone: () => Promise<void>;
 }) {
+  const [step, setStep] = useState<"form" | "preview">("form");
   const [date, setDate] = useState(() =>
     reservation.pickup_at
       ? toDatetimeLocal(new Date(reservation.pickup_at))
@@ -1130,89 +1131,140 @@ function SchedulePickupModal({
     for (const s of siblings) map[s.id] = true;
     return map;
   });
-  const [saving, setSaving] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [preview, setPreview] = useState<{ subject: string; html: string; recipientName: string; recipientEmail: string } | null>(null);
   const [err, setErr] = useState("");
 
-  async function submit() {
-    setSaving(true);
-    setErr("");
+  function currentBody() {
     const ids = Object.entries(selected).filter(([, v]) => v).map(([k]) => k);
+    return {
+      reservationIds: ids,
+      pickupAt: new Date(date).toISOString(),
+      pickupLocation: locationOverride.trim() || undefined,
+    };
+  }
+
+  async function loadPreview() {
+    setPreviewing(true);
+    setErr("");
+    const res = await fetch("/api/admin/reservations/schedule-pickup/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentBody()),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setErr(body.error ?? "Failed to load preview");
+      setPreviewing(false);
+      return;
+    }
+    setPreview(await res.json());
+    setStep("preview");
+    setPreviewing(false);
+  }
+
+  async function send() {
+    setSending(true);
+    setErr("");
     const res = await fetch("/api/admin/reservations/schedule-pickup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reservationIds: ids,
-        pickupAt: new Date(date).toISOString(),
-        pickupLocation: locationOverride.trim() || undefined,
-      }),
+      body: JSON.stringify(currentBody()),
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
       setErr(body.error ?? "Failed to schedule pickup");
-      setSaving(false);
+      setSending(false);
       return;
     }
     await onDone();
   }
 
+  const someSelected = Object.values(selected).some(Boolean);
+
   return (
     <ModalShell title={`Schedule pickup — ${reservation.buyer_name}`} onClose={onClose}>
-      <div className="space-y-3">
-        <div>
-          <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Pickup date & time</label>
-          <input
-            type="datetime-local"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            className="w-full border border-gray-300 px-3 py-2 text-sm rounded focus:outline-none focus:border-gray-600"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Items in this pickup</label>
-          <div className="border border-gray-200 rounded divide-y divide-gray-100">
-            <label className="flex items-center gap-2 px-3 py-2 text-sm">
-              <input
-                type="checkbox"
-                checked={selected[reservation.id] ?? false}
-                onChange={e => setSelected(s => ({ ...s, [reservation.id]: e.target.checked }))}
-              />
-              <span className="flex-1">{reservation.product_name}</span>
-              <span className="text-xs text-gray-400">{fmt(reservation.product_sale_price)}</span>
-            </label>
-            {siblings.map(s => (
-              <label key={s.id} className="flex items-center gap-2 px-3 py-2 text-sm">
+      {step === "form" ? (
+        <div className="space-y-3">
+          <div>
+            <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Pickup date & time</label>
+            <input
+              type="datetime-local"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full border border-gray-300 px-3 py-2 text-sm rounded focus:outline-none focus:border-gray-600"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Items in this pickup</label>
+            <div className="border border-gray-200 rounded divide-y divide-gray-100">
+              <label className="flex items-center gap-2 px-3 py-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={selected[s.id] ?? false}
-                  onChange={e => setSelected(state => ({ ...state, [s.id]: e.target.checked }))}
+                  checked={selected[reservation.id] ?? false}
+                  onChange={e => setSelected(s => ({ ...s, [reservation.id]: e.target.checked }))}
                 />
-                <span className="flex-1">{s.product_name}</span>
-                <span className="text-xs text-gray-400">{fmt(s.product_sale_price)}</span>
+                <span className="flex-1">{reservation.product_name}</span>
+                <span className="text-xs text-gray-400">{fmt(reservation.product_sale_price)}</span>
               </label>
-            ))}
+              {siblings.map(s => (
+                <label key={s.id} className="flex items-center gap-2 px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selected[s.id] ?? false}
+                    onChange={e => setSelected(state => ({ ...state, [s.id]: e.target.checked }))}
+                  />
+                  <span className="flex-1">{s.product_name}</span>
+                  <span className="text-xs text-gray-400">{fmt(s.product_sale_price)}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Pickup location (optional override)</label>
+            <input
+              type="text"
+              value={locationOverride}
+              onChange={e => setLocationOverride(e.target.value)}
+              placeholder="Leave blank to use the default from Site Settings"
+              className="w-full border border-gray-300 px-3 py-2 text-sm rounded focus:outline-none focus:border-gray-600"
+            />
+          </div>
+          <p className="text-[11px] text-gray-500">Preview the pickup-confirmation email before sending. Email goes to {reservation.buyer_email} (BCC&apos;d to you) with a Google Calendar link.</p>
+          {err && <p className="text-xs text-red-600">{err}</p>}
+          <div className="flex justify-end gap-2 pt-2">
+            <button onClick={onClose} disabled={previewing} className="text-[11px] tracking-wide uppercase px-3 py-1.5 border border-gray-300 text-gray-500 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button onClick={loadPreview} disabled={previewing || !someSelected} className="text-[11px] tracking-wide uppercase px-3 py-1.5 bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-40">
+              {previewing ? "Loading…" : "Preview email"}
+            </button>
           </div>
         </div>
-        <div>
-          <label className="text-[10px] tracking-widest uppercase text-gray-400 block mb-1">Pickup location (optional override)</label>
-          <input
-            type="text"
-            value={locationOverride}
-            onChange={e => setLocationOverride(e.target.value)}
-            placeholder="Leave blank to use the default from Site Settings"
-            className="w-full border border-gray-300 px-3 py-2 text-sm rounded focus:outline-none focus:border-gray-600"
-          />
+      ) : (
+        <div className="space-y-3">
+          {preview && (
+            <>
+              <div className="text-xs text-gray-500 space-y-0.5">
+                <p><span className="text-gray-400">To:</span> {preview.recipientName} &lt;{preview.recipientEmail}&gt;</p>
+                <p><span className="text-gray-400">Subject:</span> {preview.subject}</p>
+              </div>
+              <div className="border border-gray-200 rounded p-4 bg-gray-50 text-sm text-gray-800" dangerouslySetInnerHTML={{ __html: preview.html }} />
+              <p className="text-[11px] text-gray-500">Clicking Send will schedule the pickup, email the buyer, and BCC you with the Google Calendar link.</p>
+            </>
+          )}
+          {err && <p className="text-xs text-red-600">{err}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            <button onClick={() => setStep("form")} disabled={sending} className="text-[11px] tracking-wide uppercase px-3 py-1.5 border border-gray-300 text-gray-500 hover:bg-gray-50">
+              Back
+            </button>
+            <button onClick={send} disabled={sending} className="text-[11px] tracking-wide uppercase px-3 py-1.5 bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-40">
+              {sending ? "Sending…" : "Send email"}
+            </button>
+          </div>
         </div>
-        <p className="text-[11px] text-gray-500">Sends a pickup-confirmation email to {reservation.buyer_email} (BCC&apos;d to you) with a Google Calendar link.</p>
-        {err && <p className="text-xs text-red-600">{err}</p>}
-        <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} disabled={saving} className="text-[11px] tracking-wide uppercase px-3 py-1.5 border border-gray-300 text-gray-500 hover:bg-gray-50">
-            Cancel
-          </button>
-          <button onClick={submit} disabled={saving} className="text-[11px] tracking-wide uppercase px-3 py-1.5 bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-40">
-            {saving ? "Sending…" : "Schedule & send email"}
-          </button>
-        </div>
-      </div>
+      )}
     </ModalShell>
   );
 }
