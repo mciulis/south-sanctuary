@@ -42,8 +42,105 @@ interface BuyerNoteRow {
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const AGING_RED_HOURS = 36;
 
-type ViewMode = "summary" | "person" | "item";
+type ViewMode = "summary" | "person" | "item" | "status";
 type ItemGrouping = "none" | "brand" | "room";
+
+type StatusBucketKey =
+  | "needs_offer"
+  | "awaiting_deposit"
+  | "awaiting_pickup_scheduling"
+  | "pickup_scheduled"
+  | "paid_awaiting_pickup"
+  | "picked_up"
+  | "waitlist"
+  | "cancelled"
+  | "withdrawn";
+
+interface StatusBucketDef {
+  key: StatusBucketKey;
+  label: string;
+  description: string;
+  defaultExpanded: boolean;
+  sortBy: (r: ReservationRow) => number;
+}
+
+const STATUS_BUCKETS: StatusBucketDef[] = [
+  {
+    key: "needs_offer",
+    label: "Needs offer",
+    description: "First in line, offer email not yet sent",
+    defaultExpanded: true,
+    sortBy: (r) => -new Date(r.created_at).getTime(),
+  },
+  {
+    key: "awaiting_deposit",
+    label: "Awaiting deposit",
+    description: "Offer sent, waiting on Venmo",
+    defaultExpanded: true,
+    sortBy: (r) => new Date(r.offered_at ?? r.created_at).getTime(),
+  },
+  {
+    key: "awaiting_pickup_scheduling",
+    label: "Awaiting pickup scheduling",
+    description: "Deposit received, pickup time not yet set",
+    defaultExpanded: true,
+    sortBy: (r) => new Date(r.deposit_received_at ?? r.created_at).getTime(),
+  },
+  {
+    key: "pickup_scheduled",
+    label: "Pickup scheduled",
+    description: "Pickup time set",
+    defaultExpanded: true,
+    sortBy: (r) => new Date(r.pickup_at ?? 0).getTime(),
+  },
+  {
+    key: "paid_awaiting_pickup",
+    label: "Paid in full, awaiting pickup",
+    description: "Paid in full but not yet picked up",
+    defaultExpanded: true,
+    sortBy: (r) => new Date(r.pickup_at ?? r.paid_in_full_at ?? 0).getTime(),
+  },
+  {
+    key: "picked_up",
+    label: "Picked up",
+    description: "Complete — item has left the building",
+    defaultExpanded: false,
+    sortBy: (r) => -new Date(r.picked_up_at ?? 0).getTime(),
+  },
+  {
+    key: "waitlist",
+    label: "Waitlist (backup)",
+    description: "Position 2+ for their item",
+    defaultExpanded: false,
+    sortBy: (r) => (r.waitlist_position ?? 99) * 10000 + new Date(r.created_at).getTime() / 1e10,
+  },
+  {
+    key: "cancelled",
+    label: "Cancelled",
+    description: "Cancelled by you",
+    defaultExpanded: false,
+    sortBy: (r) => -new Date(r.created_at).getTime(),
+  },
+  {
+    key: "withdrawn",
+    label: "Withdrawn",
+    description: "Buyer backed out",
+    defaultExpanded: false,
+    sortBy: (r) => -new Date(r.created_at).getTime(),
+  },
+];
+
+function classifyReservation(r: ReservationRow): StatusBucketKey {
+  if (r.status === "cancelled") return "cancelled";
+  if (r.status === "withdrawn") return "withdrawn";
+  if (r.pickup_state === "picked_up") return "picked_up";
+  if (r.payment_state === "paid_in_full") return "paid_awaiting_pickup";
+  if (r.pickup_state === "scheduled") return "pickup_scheduled";
+  if (r.payment_state === "deposit_paid") return "awaiting_pickup_scheduling";
+  if (r.waitlist_position && r.waitlist_position > 1) return "waitlist";
+  if (!r.offered_at) return "needs_offer";
+  return "awaiting_deposit";
+}
 
 interface ReservationRow {
   id: string;
@@ -154,9 +251,15 @@ function toDatetimeLocal(d: Date): string {
 }
 
 function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
+  const labels: Record<ViewMode, string> = {
+    summary: "Summary",
+    person: "By Person",
+    item: "By Item",
+    status: "By Status",
+  };
   return (
     <div className="flex gap-1 bg-gray-100 p-1 rounded">
-      {(["summary", "person", "item"] as ViewMode[]).map(v => (
+      {(["summary", "person", "item", "status"] as ViewMode[]).map(v => (
         <button
           key={v}
           onClick={() => onChange(v)}
@@ -164,7 +267,7 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode
             view === v ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          {v === "summary" ? "Summary" : v === "person" ? "By Person" : "By Item"}
+          {labels[v]}
         </button>
       ))}
     </div>
@@ -249,6 +352,11 @@ export default function PeopleAdmin() {
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [nowMs] = useState(() => Date.now());
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const b of STATUS_BUCKETS) init[b.key] = b.defaultExpanded;
+    return init;
+  });
 
   useEffect(() => { loadData(); }, []);
 
@@ -445,12 +553,41 @@ export default function PeopleAdmin() {
     return { owed: Math.max(0, total - paid), total, paid };
   }
 
+  function siblingsForPickup(r: ReservationRow): ReservationRow[] {
+    return reservations.filter(
+      (o) =>
+        o.id !== r.id &&
+        o.buyer_email === r.buyer_email &&
+        o.status === "pending" &&
+        o.payment_state !== "none" &&
+        o.pickup_state !== "picked_up"
+    );
+  }
+
+  function buildStatusBuckets(): { def: StatusBucketDef; items: ReservationRow[] }[] {
+    const groups = new Map<StatusBucketKey, ReservationRow[]>();
+    for (const r of reservations) {
+      const key = classifyReservation(r);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(r);
+    }
+    return STATUS_BUCKETS.map((def) => {
+      const items = (groups.get(def.key) ?? []).slice().sort((a, b) => def.sortBy(a) - def.sortBy(b));
+      return { def, items };
+    });
+  }
+
+  function toggleSection(key: string) {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
   if (loading) return <p className="text-sm text-gray-400">Loading...</p>;
   if (reservations.length === 0 && products.length === 0) return <p className="text-sm text-gray-400">No requests yet.</p>;
 
   const productGroups = buildProductGroups();
   const groupedProducts = groupProducts(productGroups);
   const { reserved, unreserved, reservedTotal, unreservedTotal } = buildSummary();
+  const statusBuckets = buildStatusBuckets();
 
   return (
     <div className="space-y-6">
@@ -463,7 +600,9 @@ export default function PeopleAdmin() {
             ? `${products.length} items total`
             : view === "person"
             ? `${buyers.length} people`
-            : `${productGroups.length} items with requests`}
+            : view === "item"
+            ? `${productGroups.length} items with requests`
+            : `${reservations.length} reservations`}
         </p>
       </div>
 
@@ -781,6 +920,90 @@ export default function PeopleAdmin() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* By Status view */}
+      {view === "status" && (
+        <div className="space-y-3">
+          {statusBuckets.map(({ def, items }) => {
+            const expanded = expandedSections[def.key] ?? def.defaultExpanded;
+            return (
+              <div key={def.key} className="border border-gray-200 bg-white rounded overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection(def.key)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-3 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={`text-xs leading-none transition-transform ${expanded ? "rotate-90" : ""}`}>▸</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800">{def.label}</p>
+                      <p className="text-[11px] text-gray-400 truncate">{def.description}</p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] tabular-nums text-gray-500 shrink-0">
+                    {items.length}
+                  </span>
+                </button>
+                {expanded && items.length > 0 && (
+                  <div className="border-t border-gray-100">
+                    {items.map((r) => (
+                      <div key={r.id} className="px-5 py-3 border-t border-gray-100 first:border-t-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-800">
+                              <span className="font-medium">{r.buyer_name}</span>
+                              <span className="text-gray-400"> · </span>
+                              <span>{r.product_name}</span>
+                              {r.units_requested > 1 && (
+                                <span className="text-xs text-gray-400 ml-1">×{r.units_requested}</span>
+                              )}
+                              {r.product_sale_price != null && (
+                                <span className="text-[11px] text-gray-400 ml-2 tabular-nums">{fmt(r.product_sale_price * r.units_requested)}</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              <a href={`mailto:${r.buyer_email}`} className="hover:underline">{r.buyer_email}</a>
+                              {r.buyer_phone && <span> · {r.buyer_phone}</span>}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {r.waitlist_position !== null && r.waitlist_position > 1 && (
+                                <span className="text-[10px] text-gray-400 tabular-nums">
+                                  #{r.waitlist_position}{r.waitlistTotal > 1 ? ` of ${r.waitlistTotal}` : ""}
+                                </span>
+                              )}
+                              <StatePills r={r} />
+                              <AgingBadge r={r} nowMs={nowMs} />
+                              <NoShowBadge r={r} nowMs={nowMs} />
+                            </div>
+                            {r.pickup_at && (
+                              <p className="text-[11px] text-gray-500 mt-1">
+                                Pickup: {new Date(r.pickup_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                {r.pickup_location && <span className="text-gray-400"> · {r.pickup_location}</span>}
+                              </p>
+                            )}
+                          </div>
+                          <FulfillmentActions
+                            r={r}
+                            siblingsForPickup={siblingsForPickup(r)}
+                            updating={updatingItem}
+                            onPatch={patchReservation}
+                            onOpenModal={setModal}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {expanded && items.length === 0 && (
+                  <div className="border-t border-gray-100 px-5 py-3">
+                    <p className="text-xs text-gray-400">Nothing in this bucket.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

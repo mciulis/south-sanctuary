@@ -82,21 +82,54 @@ export function renderPickupConfirmationHtml(vars: PickupEmailVars): string {
   const firstName = firstNameOf(vars.buyerName);
   const isSingle = vars.items.length === 1;
 
+  let totalPrice = 0;
+  let totalDeposit = 0;
   let totalBalance = 0;
   const itemRows = vars.items.map((it) => {
     const price = (it.salePrice ?? 0) * it.unitsRequested;
-    const paid = it.depositAmount ?? 0;
-    const balance = Math.max(0, price - paid);
+    const deposit = it.depositAmount ?? 0;
+    const balance = Math.max(0, price - deposit);
+    totalPrice += price;
+    totalDeposit += deposit;
     totalBalance += balance;
     const qty = it.unitsRequested > 1 ? ` ×${it.unitsRequested}` : "";
-    return { name: `${it.productName}${qty}`, balance };
+    return { name: `${it.productName}${qty}`, price, deposit, balance };
   });
 
-  const balanceBlock = isSingle
-    ? `<p ${P}>Balance due at pickup for <strong>${itemRows[0].name}</strong>: <strong>${money(totalBalance)}</strong> (cash or Venmo @mciulis).</p>`
-    : `<p ${P}>Items:</p>
-      <ul ${UL}>${itemRows.map((r) => `<li ${LI}>${r.name} — balance: ${money(r.balance) ?? "$0"}</li>`).join("")}</ul>
-      <p ${P}>Total balance due at pickup: <strong>${money(totalBalance)}</strong> (cash or Venmo @mciulis).</p>`;
+  const venmoNote = "cash or Venmo @mciulis";
+
+  let balanceBlock: string;
+  if (isSingle) {
+    const r = itemRows[0];
+    if (r.deposit > 0 && r.balance > 0) {
+      balanceBlock = `
+        <p ${P}><strong>${r.name}</strong> — ${money(r.price)} total. You've paid <strong>${money(r.deposit)}</strong> as a deposit.</p>
+        <p ${P}>Balance due at pickup: <strong>${money(r.balance)}</strong> (${venmoNote}).</p>`;
+    } else if (r.balance === 0) {
+      balanceBlock = `
+        <p ${P}><strong>${r.name}</strong> — ${money(r.price)} total, paid in full. Nothing further due at pickup.</p>`;
+    } else {
+      balanceBlock = `
+        <p ${P}>Balance due at pickup for <strong>${r.name}</strong>: <strong>${money(r.balance)}</strong> (${venmoNote}).</p>`;
+    }
+  } else {
+    const itemLines = itemRows
+      .map((r) => {
+        const parts = [`${money(r.price)} total`];
+        if (r.deposit > 0) parts.push(`deposit paid ${money(r.deposit)}`);
+        parts.push(`balance ${money(r.balance) ?? "$0"}`);
+        return `<li ${LI}><strong>${r.name}</strong> — ${parts.join(", ")}</li>`;
+      })
+      .join("");
+    const totalsLine =
+      totalDeposit > 0
+        ? `<p ${P}>Total: ${money(totalPrice)} · Deposits paid: <strong>${money(totalDeposit)}</strong> · Balance due at pickup: <strong>${money(totalBalance)}</strong> (${venmoNote}).</p>`
+        : `<p ${P}>Total balance due at pickup: <strong>${money(totalBalance)}</strong> (${venmoNote}).</p>`;
+    balanceBlock = `
+      <p ${P}>Items:</p>
+      <ul ${UL}>${itemLines}</ul>
+      ${totalsLine}`;
+  }
 
   return `
       <p ${P}>Hi ${firstName},</p>
