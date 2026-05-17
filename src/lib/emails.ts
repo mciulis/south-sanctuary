@@ -33,17 +33,17 @@ export function renderOfferEmailHtml(vars: OfferEmailVars): string {
       : `Thanks for reaching out about our moving sale. Good news — you're first in line for ${vars.productName}${quantityNote}${priceDisplay ? ` — ${priceDisplay}` : ""}${depositDisplay ? ` (deposit: ${depositDisplay})` : ""}.`;
 
   const depositPara = depositDisplay
-    ? `<p>To hold it, please send your deposit via Venmo to @mciulis within 48 hours. The deposit goes toward your total at pickup. Once you send it, reply to this email with a few times that work for pickup and we'll confirm one — pickup needs to happen within 72 hours of your deposit unless otherwise arranged. If we don't receive the deposit within 48 hours, we'll offer the item to the next person.</p>`
-    : `<p>We'll be in touch in the next few days with details on next steps, including pickup timing and how to reserve your spot.</p>`;
+    ? `<p ${P}>To hold it, please send your deposit via Venmo to @mciulis within 48 hours. The deposit goes toward your total at pickup. Once you send it, reply to this email with a few times that work for pickup and we'll confirm one — pickup needs to happen within 72 hours of your deposit unless otherwise arranged. If we don't receive the deposit within 48 hours, we'll offer the item to the next person.</p>`
+    : `<p ${P}>We'll be in touch in the next few days with details on next steps, including pickup timing and how to reserve your spot.</p>`;
 
   return `
-      <p>Hi ${firstName},</p>
+      <p ${P}>Hi ${firstName},</p>
 
-      <p>${lead}</p>
+      <p ${P}>${lead}</p>
 
       ${depositPara}
 
-      <p>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
+      <p ${P}>Mike &amp; Ali<br>southsanctuarypdx.com/moving-sale</p>
     `;
 }
 
@@ -74,34 +74,39 @@ function formatPickupTime(d: Date): string {
   });
 }
 
+const P = `style="margin:0 0 1em 0; line-height:1.5"`;
+const UL = `style="margin:0 0 1em 0; padding-left:1.4em; line-height:1.5"`;
+const LI = `style="margin:0 0 0.25em 0"`;
+
 export function renderPickupConfirmationHtml(vars: PickupEmailVars): string {
   const firstName = firstNameOf(vars.buyerName);
-  const itemPlural = vars.items.length === 1 ? "" : "s";
-  let totalBalance = 0;
+  const isSingle = vars.items.length === 1;
 
-  const itemLines = vars.items
-    .map((it) => {
-      const price = (it.salePrice ?? 0) * it.unitsRequested;
-      const paid = it.depositAmount ?? 0;
-      const balance = Math.max(0, price - paid);
-      totalBalance += balance;
-      const qty = it.unitsRequested > 1 ? ` ×${it.unitsRequested}` : "";
-      return `<li>${it.productName}${qty} — balance: ${money(balance) ?? "$0"}</li>`;
-    })
-    .join("");
+  let totalBalance = 0;
+  const itemRows = vars.items.map((it) => {
+    const price = (it.salePrice ?? 0) * it.unitsRequested;
+    const paid = it.depositAmount ?? 0;
+    const balance = Math.max(0, price - paid);
+    totalBalance += balance;
+    const qty = it.unitsRequested > 1 ? ` ×${it.unitsRequested}` : "";
+    return { name: `${it.productName}${qty}`, balance };
+  });
+
+  const balanceBlock = isSingle
+    ? `<p ${P}>Balance due at pickup for <strong>${itemRows[0].name}</strong>: <strong>${money(totalBalance)}</strong> (cash or Venmo @mciulis).</p>`
+    : `<p ${P}>Items:</p>
+      <ul ${UL}>${itemRows.map((r) => `<li ${LI}>${r.name} — balance: ${money(r.balance) ?? "$0"}</li>`).join("")}</ul>
+      <p ${P}>Total balance due at pickup: <strong>${money(totalBalance)}</strong> (cash or Venmo @mciulis).</p>`;
 
   return `
-      <p>Hi ${firstName},</p>
+      <p ${P}>Hi ${firstName},</p>
 
-      <p>You're confirmed for pickup on <strong>${formatPickupTime(vars.pickupAt)}</strong> at ${vars.pickupLocation}.</p>
+      <p ${P}>You're confirmed for pickup on <strong>${formatPickupTime(vars.pickupAt)}</strong> at ${vars.pickupLocation}.</p>
 
-      <p>Item${itemPlural}:</p>
-      <ul>${itemLines}</ul>
+      ${balanceBlock}
 
-      <p>Total balance due at pickup: <strong>${money(totalBalance)}</strong> (cash or Venmo @mciulis).</p>
+      <p ${P}><a href="${vars.gcalUrl}">Add to Google Calendar</a></p>
 
-      <p><a href="${vars.gcalUrl}">Add to Google Calendar</a></p>
-
-      <p>See you then,<br>Mike &amp; Ali</p>
+      <p ${P}>See you then,<br>Mike &amp; Ali</p>
     `;
 }
