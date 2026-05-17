@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     from: "mike@southsanctuarypdx.com",
     replyTo: [process.env.NOTIFICATION_EMAIL!],
     to: buyerEmail,
+    bcc: [process.env.NOTIFICATION_EMAIL!],
     subject: isFirst
       ? "You're first in line — South Sanctuary Moving Sale"
       : "You're on the list — South Sanctuary Moving Sale",
