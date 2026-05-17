@@ -37,3 +37,30 @@ export const CONDITION_DISCOUNTS: Record<string, number> = {
   used_fair: 70,
   damaged: 90,
 };
+
+export type ReservationStatus = "pending" | "cancelled" | "withdrawn";
+export type PaymentState = "none" | "deposit_paid" | "paid_in_full";
+export type PickupState = "not_scheduled" | "scheduled" | "picked_up";
+
+export interface Reservation {
+  id: string;
+  product_id: number;
+  buyer_name: string;
+  buyer_email: string;
+  buyer_phone: string | null;
+  message: string | null;
+  status: ReservationStatus;
+  created_at: string;
+  units_requested: number;
+  waitlist_position: number | null;
+  payment_state: PaymentState;
+  pickup_state: PickupState;
+  offered_at: string | null;
+  deposit_amount: number | null;
+  deposit_received_at: string | null;
+  total_amount_paid: number | null;
+  paid_in_full_at: string | null;
+  pickup_at: string | null;
+  picked_up_at: string | null;
+  pickup_location: string | null;
+}

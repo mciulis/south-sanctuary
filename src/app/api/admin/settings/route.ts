@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
   if (typeof body.site_password === "string" && body.site_password.trim()) {
     updates.push({ key: "site_password", value: body.site_password.trim() });
   }
+  if (typeof body.pickup_address === "string") {
+    updates.push({ key: "pickup_address", value: body.pickup_address.trim() });
+  }
 
   for (const update of updates) {
     const { error } = await supabase

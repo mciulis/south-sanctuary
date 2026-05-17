@@ -9,10 +9,11 @@ export async function POST(req: NextRequest) {
 
   // Read waitlist position from the newly inserted reservation
   let position = 1;
+  let reservationId: string | null = null;
   if (productId) {
     const { data: reservation } = await supabaseAdmin
       .from("reservations")
-      .select("waitlist_position")
+      .select("id, waitlist_position")
       .eq("product_id", productId)
       .eq("buyer_email", buyerEmail)
       .order("created_at", { ascending: false })
@@ -20,6 +21,16 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     position = reservation?.waitlist_position ?? 1;
+    reservationId = reservation?.id ?? null;
+  }
+
+  // Stamp offered_at when buyer is first in line — they're getting the offer email below
+  if (position === 1 && reservationId) {
+    await supabaseAdmin
+      .from("reservations")
+      .update({ offered_at: new Date().toISOString() })
+      .eq("id", reservationId)
+      .is("offered_at", null);
   }
 
   const firstName = buyerName.trim().split(" ")[0];

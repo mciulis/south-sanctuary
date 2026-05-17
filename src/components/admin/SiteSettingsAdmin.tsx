@@ -7,11 +7,15 @@ export default function SiteSettingsAdmin() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [savedPickupAddress, setSavedPickupAddress] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [savingPickup, setSavingPickup] = useState(false);
   const [toggleMsg, setToggleMsg] = useState("");
   const [passwordMsg, setPasswordMsg] = useState("");
+  const [pickupMsg, setPickupMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -19,9 +23,32 @@ export default function SiteSettingsAdmin() {
       .then((data) => {
         setProtectionEnabled(data.password_protection_enabled === "true");
         setPassword(data.site_password ?? "");
+        setPickupAddress(data.pickup_address ?? "");
+        setSavedPickupAddress(data.pickup_address ?? "");
         setLoading(false);
       });
   }, []);
+
+  async function handlePickupAddressSave() {
+    setSavingPickup(true);
+    setPickupMsg("");
+    const res = await fetch("/api/admin/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-password": process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "",
+      },
+      body: JSON.stringify({ pickup_address: pickupAddress }),
+    });
+    if (res.ok) {
+      setSavedPickupAddress(pickupAddress);
+      setPickupMsg("Pickup address saved.");
+    } else {
+      setPickupMsg("Failed to save. Please try again.");
+    }
+    setSavingPickup(false);
+    setTimeout(() => setPickupMsg(""), 3000);
+  }
 
   async function handleToggle(enabled: boolean) {
     setSaving(true);
@@ -153,6 +180,35 @@ export default function SiteSettingsAdmin() {
             {savingPassword ? "Saving…" : "Update Passphrase"}
           </button>
         </form>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-medium text-gray-800 tracking-wide uppercase mb-1">Pickup Address</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Default address sent to buyers in pickup-confirmation emails and used for Google Calendar events.
+        </p>
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={pickupAddress}
+            onChange={(e) => setPickupAddress(e.target.value)}
+            placeholder="e.g. 1234 SE Example St, Portland OR 97214"
+            className="w-full border border-gray-200 px-4 py-2.5 text-sm bg-white focus:outline-none focus:border-gray-500 rounded"
+          />
+          {pickupMsg && (
+            <p className={`text-xs ${pickupMsg.includes("Failed") ? "text-red-500" : "text-green-600"}`}>
+              {pickupMsg}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handlePickupAddressSave}
+            disabled={savingPickup || pickupAddress === savedPickupAddress}
+            className="bg-gray-800 text-white text-xs tracking-widest uppercase px-6 py-2.5 hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed rounded"
+          >
+            {savingPickup ? "Saving…" : "Save Address"}
+          </button>
+        </div>
       </div>
     </div>
   );
