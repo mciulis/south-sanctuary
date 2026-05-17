@@ -1,6 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { buildGCalUrl } from "@/lib/calendar";
-import { renderPickupConfirmationHtml, type PickupItem } from "@/lib/emails";
+import {
+  renderPickupBreakdownText,
+  renderPickupConfirmationHtml,
+  type PickupItem,
+} from "@/lib/emails";
 
 export const PICKUP_DURATION_MINUTES = 30;
 export const PICKUP_EMAIL_SUBJECT = "Pickup confirmed — South Sanctuary Moving Sale";
@@ -83,9 +87,7 @@ export async function buildScheduledPickup(input: SchedulePickupInput): Promise<
     title: `Pickup: ${itemTitles} — ${buyerName}`,
     start: pickupAt,
     end: pickupEnd,
-    details: `Pickup from South Sanctuary moving sale.\n\nItems:\n${items
-      .map((i) => `- ${i.productName}${i.unitsRequested > 1 ? ` ×${i.unitsRequested}` : ""}`)
-      .join("\n")}`,
+    details: `Pickup from South Sanctuary moving sale.\n\n${renderPickupBreakdownText(items)}`,
     location: pickupLocation,
   });
 

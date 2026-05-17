@@ -62,6 +62,48 @@ export interface PickupEmailVars {
   gcalUrl: string;
 }
 
+export function renderPickupBreakdownText(items: PickupItem[]): string {
+  const isSingle = items.length === 1;
+  let totalPrice = 0;
+  let totalDeposit = 0;
+  let totalBalance = 0;
+  const rows = items.map((it) => {
+    const price = (it.salePrice ?? 0) * it.unitsRequested;
+    const deposit = it.depositAmount ?? 0;
+    const balance = Math.max(0, price - deposit);
+    totalPrice += price;
+    totalDeposit += deposit;
+    totalBalance += balance;
+    const qty = it.unitsRequested > 1 ? ` ×${it.unitsRequested}` : "";
+    return { name: `${it.productName}${qty}`, price, deposit, balance };
+  });
+
+  const itemLines = rows.map((r) => {
+    if (r.balance === 0) return `- ${r.name} — $${r.price} total, paid in full`;
+    const parts = [`$${r.price} total`];
+    if (r.deposit > 0) parts.push(`deposit paid $${r.deposit}`);
+    parts.push(`balance due $${r.balance}`);
+    return `- ${r.name} — ${parts.join(", ")}`;
+  });
+
+  const lines: string[] = [];
+  lines.push(isSingle ? "Item:" : "Items:");
+  lines.push(...itemLines);
+  lines.push("");
+
+  if (totalBalance === 0) {
+    lines.push("Paid in full — nothing further due at pickup.");
+  } else if (!isSingle && totalDeposit > 0) {
+    lines.push(`Total: $${totalPrice}`);
+    lines.push(`Deposits paid: $${totalDeposit}`);
+    lines.push(`Balance due at pickup: $${totalBalance} (cash or Venmo @mciulis)`);
+  } else {
+    lines.push(`Balance due at pickup: $${totalBalance} (cash or Venmo @mciulis)`);
+  }
+
+  return lines.join("\n");
+}
+
 function formatPickupTime(d: Date): string {
   return d.toLocaleString("en-US", {
     weekday: "long",
