@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { track } from "@vercel/analytics";
 
 interface HeroContent {
@@ -62,6 +63,15 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
           >
             View on Redfin
           </a>
+        </div>
+        <div className="mt-4">
+          <Link
+            href="/moving-sale"
+            onClick={() => track("listing_click", { platform: "moving_sale" })}
+            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
+          >
+            Shop the moving sale
+          </Link>
         </div>
       </div>
 
