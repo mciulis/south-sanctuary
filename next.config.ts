@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         destination: "/moving-sale/:id",
         permanent: true,
       },
+      {
+        source: "/contact",
+        destination: "/",
+        permanent: false,
+      },
     ];
   },
 };
