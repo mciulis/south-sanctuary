@@ -24,27 +24,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
       <div className="absolute inset-0 bg-ss-ink/48" />
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-        <div className="mb-8 flex flex-col items-center gap-1.5">
-          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
-            230 S Canby
-          </p>
-          <p className="text-[11px] tracking-[0.3em] text-white font-medium uppercase">
-            Portland, OR USA
-          </p>
-        </div>
-        <h1
-          className="font-display font-light text-white leading-[0.9]"
-          style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
-        >
-          {headline1}
-        </h1>
-        <h1
-          className="font-display font-light italic text-white leading-[0.9]"
-          style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
-        >
-          {headline2}
-        </h1>
-        <div className="mt-8 flex gap-6">
+        <div className="mb-8 flex items-center gap-6">
           <a
             href="https://www.zillow.com/homedetails/230-S-Canby-St-Portland-OR-97219/53834795_zpid/"
             target="_blank"
@@ -64,11 +44,23 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
             View on Redfin
           </a>
         </div>
-        <div className="mt-4">
+        <h1
+          className="font-display font-light text-white leading-[0.9]"
+          style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
+        >
+          {headline1}
+        </h1>
+        <h1
+          className="font-display font-light italic text-white leading-[0.9]"
+          style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
+        >
+          {headline2}
+        </h1>
+        <div className="mt-8">
           <Link
             href="/moving-sale"
             onClick={() => track("listing_click", { platform: "moving_sale" })}
-            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
+            className="text-sm text-white font-medium underline underline-offset-4 hover:text-white/75 transition-colors"
           >
             Shop the moving sale
           </Link>
