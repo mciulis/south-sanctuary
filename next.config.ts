@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: false,
       },
+      {
+        source: "/records",
+        destination: "/",
+        permanent: false,
+      },
     ];
   },
 };
