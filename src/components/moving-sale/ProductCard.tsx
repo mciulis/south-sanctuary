@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/estate";
-import { MARKETPLACE_PROFILE_URL } from "@/lib/marketplace";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -97,26 +96,16 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      {/* Marketplace action links — only for available, with-URL items */}
+      {/* Marketplace action link — only for available, with-URL items */}
       {!isSold && !isPending && product.facebook_url && (
-        <div className="mt-2 flex flex-col gap-1">
-          <a
-            href={product.facebook_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] tracking-[0.15em] text-ss-ink uppercase underline underline-offset-4 hover:text-ss-taupe transition-colors"
-          >
-            Shop on Marketplace ↗
-          </a>
-          <a
-            href={MARKETPLACE_PROFILE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] tracking-[0.15em] text-ss-taupe/70 uppercase hover:text-ss-ink transition-colors"
-          >
-            View all on Marketplace
-          </a>
-        </div>
+        <a
+          href={product.facebook_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-block text-[10px] tracking-[0.15em] text-ss-ink uppercase underline underline-offset-4 hover:text-ss-taupe transition-colors"
+        >
+          Shop on Marketplace ↗
+        </a>
       )}
       {isPending && (
         <p className="mt-2 text-[10px] tracking-[0.15em] text-ss-taupe/70 uppercase">

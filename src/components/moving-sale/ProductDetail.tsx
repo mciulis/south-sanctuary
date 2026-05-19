@@ -242,14 +242,6 @@ export default function ProductDetail({ product, images }: Props) {
                 >
                   Shop on Facebook Marketplace ↗
                 </a>
-                <a
-                  href={MARKETPLACE_PROFILE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center text-[10px] tracking-[0.18em] uppercase text-ss-taupe hover:text-ss-ink transition-colors"
-                >
-                  View all on Marketplace
-                </a>
                 <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe text-center">
                   First-come, first-serve. Message us on Marketplace to claim.
                 </p>
