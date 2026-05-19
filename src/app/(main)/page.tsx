@@ -78,7 +78,7 @@ export default async function Home() {
       <QuoteSection content={s.quote} />
       <SettingSection content={s.setting} />
       <HomepageStory sections={storySections} />
-      <MovingCta content={s["moving-cta"]} />
+      <MovingCta content={s["moving-cta"]} showListingLinks />
     </>
   );
 }

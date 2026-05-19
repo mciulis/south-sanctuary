@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { track } from "@vercel/analytics";
 
 interface MovingCtaContent {
   headline1?: string;
@@ -13,11 +16,13 @@ export default function MovingCta({
   hideButton = false,
   backgroundImage,
   footnote,
+  showListingLinks = false,
 }: {
   content?: MovingCtaContent;
   hideButton?: boolean;
   backgroundImage?: string;
   footnote?: string;
+  showListingLinks?: boolean;
 }) {
   const {
     headline1 = "THE MOVING SALE",
@@ -71,6 +76,29 @@ export default function MovingCta({
           <p className="text-[11px] italic text-white/65 mt-10 max-w-xs mx-auto leading-relaxed">
             {footnote}
           </p>
+        )}
+        {showListingLinks && (
+          <div className="mt-14 flex items-center justify-center gap-6">
+            <a
+              href="https://www.zillow.com/homedetails/230-S-Canby-St-Portland-OR-97219/53834795_zpid/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("listing_click", { platform: "zillow" })}
+              className="text-[10px] tracking-[0.22em] text-white/60 font-medium uppercase underline underline-offset-4 hover:text-white transition-colors"
+            >
+              View on Zillow
+            </a>
+            <span className="text-white/30 text-[10px]">·</span>
+            <a
+              href="https://www.redfin.com/OR/Portland/230-S-Canby-St-97219/home/26390460"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("listing_click", { platform: "redfin" })}
+              className="text-[10px] tracking-[0.22em] text-white/60 font-medium uppercase underline underline-offset-4 hover:text-white transition-colors"
+            >
+              View on Redfin
+            </a>
+          </div>
         )}
       </div>
     </section>

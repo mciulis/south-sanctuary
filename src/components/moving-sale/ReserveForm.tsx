@@ -91,7 +91,7 @@ export default function ReserveForm({
           Notify Me
         </p>
         <p className="text-sm text-ss-ink-soft leading-relaxed mb-8">
-          Leave your contact info and we&apos;ll reach out as soon as this piece is available after closing. No commitment required.
+          Leave your contact info and we&apos;ll reach out as soon as this piece becomes available. No commitment required.
         </p>
         <p className="text-xs text-ss-taupe italic">
           {productName}{quantity > 1 ? ` — ${quantity} units` : ""}

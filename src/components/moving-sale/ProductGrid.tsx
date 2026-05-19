@@ -33,11 +33,6 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
   return (
     <>
-      {/* Availability context */}
-      <p className="text-center text-[11px] tracking-[0.16em] text-ss-taupe/70 uppercase mb-8">
-        Items become available after closing
-      </p>
-
       {/* Sort row */}
       <div className="flex flex-col items-center gap-y-3 mb-12">
         {/* Sort row */}

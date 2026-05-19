@@ -40,7 +40,6 @@ export default async function MovingSalePage() {
           content={sectionsData?.content}
           hideButton
           backgroundImage="/images/moving-sale-hero.jpg"
-          footnote="Available after closing."
         />
       </div>
 

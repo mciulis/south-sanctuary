@@ -24,26 +24,6 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
       <div className="absolute inset-0 bg-ss-ink/48" />
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-        <div className="mb-8 flex items-center gap-6">
-          <a
-            href="https://www.zillow.com/homedetails/230-S-Canby-St-Portland-OR-97219/53834795_zpid/"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => track("listing_click", { platform: "zillow" })}
-            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
-          >
-            View on Zillow
-          </a>
-          <a
-            href="https://www.redfin.com/OR/Portland/230-S-Canby-St-97219/home/26390460"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => track("listing_click", { platform: "redfin" })}
-            className="text-[11px] tracking-[0.3em] text-white font-medium uppercase underline underline-offset-4 hover:text-white/75 transition-colors"
-          >
-            View on Redfin
-          </a>
-        </div>
         <h1
           className="font-display font-light text-white leading-[0.9]"
           style={{ fontSize: "clamp(72px, 13vw, 152px)" }}
@@ -65,7 +45,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
             Shop the moving sale
           </Link>
           <p className="text-xs text-white/80 text-center px-4">
-            Available now · Open House Sunday, May 24, 1–4pm ·{" "}
+            Moving Sale Open House on Sunday, May 24, 1–4pm ·{" "}
             <a
               href="/open-house.ics"
               onClick={() => track("listing_click", { platform: "open_house_calendar" })}
