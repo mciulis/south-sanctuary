@@ -374,6 +374,27 @@ export default function MovingSaleAdmin() {
                   className="w-full text-[10px] text-gray-400 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent focus:outline-none transition-colors truncate"
                 />
                 <p className="text-sm text-gray-800 truncate font-medium">{product.name}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] text-gray-400 shrink-0">FB</span>
+                  <input
+                    type="url"
+                    value={getVal(product, "facebook_url") ?? ""}
+                    onChange={(e) => edit(product.id, "facebook_url", e.target.value || null)}
+                    placeholder="facebook.com/marketplace/item/…"
+                    className="w-full text-[10px] text-gray-500 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent focus:outline-none transition-colors truncate"
+                  />
+                  {getVal(product, "facebook_url") && (
+                    <a
+                      href={getVal(product, "facebook_url") as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-blue-600 hover:underline shrink-0"
+                      title="Open in new tab"
+                    >
+                      ↗
+                    </a>
+                  )}
+                </div>
               </div>
 
               {/* Room */}

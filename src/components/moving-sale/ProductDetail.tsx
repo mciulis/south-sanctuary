@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Product, conditionLabel } from "@/types/estate";
-import ReserveForm from "./ReserveForm";
 import Carousel from "@/components/ui/Carousel";
+import { MARKETPLACE_PROFILE_URL } from "@/lib/marketplace";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
@@ -31,10 +31,6 @@ interface Props {
 export default function ProductDetail({ product, images }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [carouselOpen, setCarouselOpen] = useState(false);
-  const [showReserve, setShowReserve] = useState(false);
-  const [localUnitsAvailable, setLocalUnitsAvailable] = useState(product.units_available);
-  const [quantity, setQuantity] = useState(1);
-  const [requestToast, setRequestToast] = useState(false);
 
   const photos =
     images.length > 0
@@ -46,7 +42,7 @@ export default function ProductDetail({ product, images }: Props) {
   const brand = product.brand;
   const condition = conditionLabel[product.condition] || "";
   const isSold =
-    product.status === "sold" || localUnitsAvailable === 0;
+    product.status === "sold" || product.units_available === 0;
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.retail_price) * 100)
@@ -69,7 +65,7 @@ export default function ProductDetail({ product, images }: Props) {
                   src={photos[activeIndex]}
                   alt={product.name}
                   fill
-                  className="object-cover transition-transform duration-500 hover:scale-[1.02]"
+                  className={`object-cover transition-transform duration-500 hover:scale-[1.02] ${isSold ? "grayscale opacity-70" : ""}`}
                   priority
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
@@ -78,6 +74,13 @@ export default function ProductDetail({ product, images }: Props) {
                   <p className="text-[10px] tracking-[0.2em] text-ss-taupe/40 uppercase text-center px-8">
                     No photo available
                   </p>
+                </div>
+              )}
+              {isSold && (
+                <div className="absolute top-4 left-4">
+                  <span className="text-[10px] tracking-[0.22em] uppercase bg-ss-ink text-white px-3 py-1.5">
+                    Sold
+                  </span>
                 </div>
               )}
             </button>
@@ -124,7 +127,7 @@ export default function ProductDetail({ product, images }: Props) {
 
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-1">
-              <span className="text-xl text-ss-ink">
+              <span className={`text-xl ${isSold ? "text-ss-ink/50 line-through" : "text-ss-ink"}`}>
                 {product.sale_price != null
                   ? `$${roundToNearest5(product.sale_price).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
                   : "Make an offer"}
@@ -132,7 +135,7 @@ export default function ProductDetail({ product, images }: Props) {
               {product.units > 1 && (
                 <span className="text-sm text-ss-taupe">per item</span>
               )}
-              {product.retail_price != null && hasDiscount && (
+              {product.retail_price != null && hasDiscount && !isSold && (
                 <>
                   <span className="text-sm text-ss-taupe/60 line-through">
                     ${product.retail_price.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -141,14 +144,9 @@ export default function ProductDetail({ product, images }: Props) {
                 </>
               )}
             </div>
-            {product.sale_price != null && product.units > 1 && quantity > 1 && (
-              <p className="text-[11px] text-ss-taupe mb-1">
-                Total: ${roundToNearest5(product.sale_price * quantity).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </p>
-            )}
 
             {/* Condition + unit count */}
-            <div className="flex gap-4 mb-8 flex-wrap">
+            <div className="flex gap-4 mt-6 mb-8 flex-wrap">
               {condition && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
                   {condition}
@@ -156,8 +154,8 @@ export default function ProductDetail({ product, images }: Props) {
               )}
               {product.units > 1 && (
                 <span className="text-[10px] tracking-[0.18em] uppercase text-ss-taupe border border-ss-border px-3 py-1">
-                  {localUnitsAvailable > 0
-                    ? `${localUnitsAvailable} of ${product.units} available`
+                  {product.units_available > 0
+                    ? `${product.units_available} of ${product.units} available`
                     : `0 of ${product.units} available`}
                 </span>
               )}
@@ -218,39 +216,27 @@ export default function ProductDetail({ product, images }: Props) {
                 </p>
               </div>
             ) : (
-              <div className="mt-auto">
-                {localUnitsAvailable > 1 && (
-                  <div className="flex items-center gap-4 mb-5">
-                    <span className="text-[10px] tracking-[0.2em] text-ss-taupe uppercase">
-                      Quantity
-                    </span>
-                    <div className="flex items-center">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        className="w-8 h-8 border border-ss-border text-ss-ink hover:border-ss-ink transition-colors flex items-center justify-center text-sm"
-                      >
-                        −
-                      </button>
-                      <span className="w-10 text-center text-sm text-ss-ink">{quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((q) => Math.min(localUnitsAvailable, q + 1))}
-                        className="w-8 h-8 border border-ss-border text-ss-ink hover:border-ss-ink transition-colors flex items-center justify-center text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowReserve(true)}
-                  className="w-full border border-ss-ink text-ss-ink text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-ss-ink hover:text-white transition-colors duration-300"
+              <div className="mt-auto space-y-3">
+                <a
+                  href={product.facebook_url ?? MARKETPLACE_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center border border-ss-ink bg-ss-ink text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-ink transition-colors duration-300"
                 >
-                  Notify Me When Available
-                </button>
-                <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe">
-                  No commitment — we&apos;ll reach out when it&apos;s available.
+                  {product.facebook_url ? "Shop on Facebook Marketplace ↗" : "View on Facebook Marketplace ↗"}
+                </a>
+                {product.facebook_url && (
+                  <a
+                    href={MARKETPLACE_PROFILE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-center text-[10px] tracking-[0.18em] uppercase text-ss-taupe hover:text-ss-ink transition-colors"
+                  >
+                    View all on Marketplace
+                  </a>
+                )}
+                <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe text-center">
+                  First-come, first-serve. Message us on Marketplace to claim.
                 </p>
               </div>
             )}
@@ -266,31 +252,6 @@ export default function ProductDetail({ product, images }: Props) {
           onClose={() => setCarouselOpen(false)}
           onIndexChange={(i) => setActiveIndex(i)}
         />
-      )}
-
-      {/* Request modal */}
-      {showReserve && (
-        <ReserveForm
-          productId={product.id}
-          productName={product.full_name}
-          salePrice={product.sale_price ?? null}
-          quantity={quantity}
-          unitsAvailable={localUnitsAvailable}
-          onSuccess={() => {
-            setShowReserve(false);
-            setLocalUnitsAvailable(product.units_available);
-            setQuantity(1);
-            setRequestToast(true);
-          }}
-          onCancel={() => setShowReserve(false)}
-        />
-      )}
-
-      {/* Success message */}
-      {requestToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-ss-ink text-white text-[11px] tracking-[0.2em] uppercase px-8 py-4 z-50">
-          We&apos;ve received your interest. You&apos;ll hear from us as soon as {product.full_name} is available.
-        </div>
       )}
     </>
   );

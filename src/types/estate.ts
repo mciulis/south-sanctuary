@@ -19,6 +19,7 @@ export interface Product {
   main_photo_filename: string | null;
   status: "available" | "reserved" | "sold";
   available_by: string | null; // ISO date string e.g. "2026-05-15"
+  facebook_url: string | null;
 }
 
 export const conditionLabel: Record<string, string> = {

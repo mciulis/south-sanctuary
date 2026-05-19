@@ -21,6 +21,7 @@ const ALLOWED_FIELDS = new Set([
   "main_photo_filename",
   "status",
   "available_by",
+  "facebook_url",
 ]);
 
 function parseProductId(value: string) {
