@@ -2,8 +2,8 @@ import Link from "next/link";
 
 const NAV_LINKS = [
   { label: "Story", href: "/" },
-  { label: "Gallery", href: "/gallery" },
   { label: "Moving Sale", href: "/moving-sale" },
+  { label: "Gallery", href: "/gallery" },
 ];
 
 export default function Footer() {

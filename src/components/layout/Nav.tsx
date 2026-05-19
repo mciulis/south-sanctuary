@@ -8,8 +8,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const NAV_LINKS = [
   { label: "STORY", href: "/" },
-  { label: "GALLERY", href: "/gallery" },
   { label: "MOVING SALE", href: "/moving-sale" },
+  { label: "GALLERY", href: "/gallery" },
 ];
 
 export default function Nav() {
