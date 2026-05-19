@@ -1,0 +1,16 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//South Sanctuary//Moving Sale Open House//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:open-house-2026-05-24@southsanctuarypdx.com
+DTSTAMP:20260518T000000Z
+DTSTART:20260524T200000Z
+DTEND:20260524T230000Z
+SUMMARY:South Sanctuary Moving Sale — Open House
+LOCATION:230 S Canby St, Portland, OR 97219
+DESCRIPTION:Drop by to shop unclaimed items from the South Sanctuary moving sale. 1–4pm Pacific. southsanctuarypdx.com/moving-sale
+URL:https://southsanctuarypdx.com/moving-sale
+END:VEVENT
+END:VCALENDAR

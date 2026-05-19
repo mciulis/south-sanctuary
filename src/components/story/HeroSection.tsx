@@ -56,14 +56,24 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
         >
           {headline2}
         </h1>
-        <div className="mt-8">
+        <div className="mt-10 flex flex-col items-center gap-4">
           <Link
             href="/moving-sale"
             onClick={() => track("listing_click", { platform: "moving_sale" })}
-            className="text-sm text-white font-medium underline underline-offset-4 hover:text-white/75 transition-colors"
+            className="border border-white/80 text-white px-8 py-3 text-sm font-medium hover:bg-white hover:text-ss-ink transition-colors"
           >
             Shop the moving sale
           </Link>
+          <p className="text-xs text-white/80 text-center px-4">
+            Available now · Open House Sunday, May 24, 1–4pm ·{" "}
+            <a
+              href="/open-house.ics"
+              onClick={() => track("listing_click", { platform: "open_house_calendar" })}
+              className="underline underline-offset-4 hover:text-white transition-colors"
+            >
+              Add to calendar
+            </a>
+          </p>
         </div>
       </div>
 
