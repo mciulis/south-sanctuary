@@ -13,10 +13,11 @@ function thumb(filename: string | null) {
 }
 
 const CONDITIONS = ["new", "used_like_new", "used_good", "used_fair", "damaged"] as const;
-const STATUSES = ["available", "reserved", "sold"] as const;
+const STATUSES = ["available", "pending", "reserved", "sold"] as const;
 
 const statusColor: Record<string, string> = {
   available: "bg-green-100 text-green-800",
+  pending: "bg-amber-100 text-amber-800",
   reserved: "bg-yellow-100 text-yellow-800",
   sold: "bg-gray-200 text-gray-500",
 };

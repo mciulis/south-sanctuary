@@ -17,6 +17,7 @@ function roundToNearest5(n: number) {
 export default function ProductCard({ product }: { product: Product }) {
   const photoUrl = getPhotoUrl(product.main_photo_filename);
   const isSold = product.status === "sold" || product.units_available === 0;
+  const isPending = product.status === "pending";
   const brand = product.brand;
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
@@ -53,7 +54,14 @@ export default function ProductCard({ product }: { product: Product }) {
               </span>
             </div>
           )}
-          {!isSold && product.units_available > 1 && (
+          {isPending && (
+            <div className="absolute top-3 left-3">
+              <span className="text-[9px] tracking-[0.2em] uppercase bg-ss-taupe text-white px-2 py-1">
+                Pending
+              </span>
+            </div>
+          )}
+          {!isSold && !isPending && product.units_available > 1 && (
             <div className="absolute top-3 right-3">
               <span className="text-[9px] tracking-[0.2em] uppercase bg-white/90 text-ss-ink px-2 py-1">
                 {product.units_available} available
@@ -89,39 +97,31 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      {/* Marketplace action links — only when not sold */}
-      {!isSold && (
+      {/* Marketplace action links — only for available, with-URL items */}
+      {!isSold && !isPending && product.facebook_url && (
         <div className="mt-2 flex flex-col gap-1">
-          {product.facebook_url ? (
-            <>
-              <a
-                href={product.facebook_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] tracking-[0.15em] text-ss-ink uppercase underline underline-offset-4 hover:text-ss-taupe transition-colors"
-              >
-                Shop on Marketplace ↗
-              </a>
-              <a
-                href={MARKETPLACE_PROFILE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] tracking-[0.15em] text-ss-taupe/70 uppercase hover:text-ss-ink transition-colors"
-              >
-                View all on Marketplace
-              </a>
-            </>
-          ) : (
-            <a
-              href={MARKETPLACE_PROFILE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] tracking-[0.15em] text-ss-ink uppercase underline underline-offset-4 hover:text-ss-taupe transition-colors"
-            >
-              View on Marketplace ↗
-            </a>
-          )}
+          <a
+            href={product.facebook_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] tracking-[0.15em] text-ss-ink uppercase underline underline-offset-4 hover:text-ss-taupe transition-colors"
+          >
+            Shop on Marketplace ↗
+          </a>
+          <a
+            href={MARKETPLACE_PROFILE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] tracking-[0.15em] text-ss-taupe/70 uppercase hover:text-ss-ink transition-colors"
+          >
+            View all on Marketplace
+          </a>
         </div>
+      )}
+      {isPending && (
+        <p className="mt-2 text-[10px] tracking-[0.15em] text-ss-taupe/70 uppercase">
+          Listing coming soon
+        </p>
       )}
     </div>
   );

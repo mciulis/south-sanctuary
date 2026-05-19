@@ -43,6 +43,7 @@ export default function ProductDetail({ product, images }: Props) {
   const condition = conditionLabel[product.condition] || "";
   const isSold =
     product.status === "sold" || product.units_available === 0;
+  const isPending = product.status === "pending";
   const effectiveDiscountPct =
     product.retail_price && product.sale_price && product.retail_price > product.sale_price
       ? Math.round((1 - product.sale_price / product.retail_price) * 100)
@@ -80,6 +81,13 @@ export default function ProductDetail({ product, images }: Props) {
                 <div className="absolute top-4 left-4">
                   <span className="text-[10px] tracking-[0.22em] uppercase bg-ss-ink text-white px-3 py-1.5">
                     Sold
+                  </span>
+                </div>
+              )}
+              {isPending && (
+                <div className="absolute top-4 left-4">
+                  <span className="text-[10px] tracking-[0.22em] uppercase bg-ss-taupe text-white px-3 py-1.5">
+                    Pending
                   </span>
                 </div>
               )}
@@ -215,26 +223,47 @@ export default function ProductDetail({ product, images }: Props) {
                   Sold
                 </p>
               </div>
-            ) : (
+            ) : isPending ? (
+              <div className="border border-ss-border text-center py-4 mt-auto">
+                <p className="text-[11px] tracking-[0.22em] uppercase text-ss-taupe mb-1">
+                  Listing coming soon
+                </p>
+                <p className="text-[10px] text-ss-taupe/70">
+                  Check back — this item will be on Marketplace shortly.
+                </p>
+              </div>
+            ) : product.facebook_url ? (
               <div className="mt-auto space-y-3">
                 <a
-                  href={product.facebook_url ?? MARKETPLACE_PROFILE_URL}
+                  href={product.facebook_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full text-center border border-ss-ink bg-ss-ink text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-ink transition-colors duration-300"
                 >
-                  {product.facebook_url ? "Shop on Facebook Marketplace ↗" : "View on Facebook Marketplace ↗"}
+                  Shop on Facebook Marketplace ↗
                 </a>
-                {product.facebook_url && (
-                  <a
-                    href={MARKETPLACE_PROFILE_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full text-center text-[10px] tracking-[0.18em] uppercase text-ss-taupe hover:text-ss-ink transition-colors"
-                  >
-                    View all on Marketplace
-                  </a>
-                )}
+                <a
+                  href={MARKETPLACE_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center text-[10px] tracking-[0.18em] uppercase text-ss-taupe hover:text-ss-ink transition-colors"
+                >
+                  View all on Marketplace
+                </a>
+                <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe text-center">
+                  First-come, first-serve. Message us on Marketplace to claim.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-auto space-y-3">
+                <a
+                  href={MARKETPLACE_PROFILE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center border border-ss-ink bg-ss-ink text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-ink transition-colors duration-300"
+                >
+                  View on Facebook Marketplace ↗
+                </a>
                 <p className="mt-3 text-[10px] tracking-[0.16em] uppercase text-ss-taupe text-center">
                   First-come, first-serve. Message us on Marketplace to claim.
                 </p>
