@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/estate";
 import ProductGrid from "@/components/moving-sale/ProductGrid";
 import MovingCta from "@/components/story/MovingCta";
+import { MARKETPLACE_PROFILE_URL } from "@/lib/marketplace";
 
 export const metadata: Metadata = {
   title: "Moving Sale — South Sanctuary",
@@ -38,8 +39,13 @@ export default async function MovingSalePage() {
       <div className="pt-20">
         <MovingCta
           content={sectionsData?.content}
-          hideButton
           backgroundImage="/images/moving-sale-hero.jpg"
+          hideButton
+          bodyOverride={["Each item below links directly to its Facebook Marketplace listing. First-come, first-serve — message us through Marketplace to claim something."]}
+          secondaryAction={{
+            text: "Or shop the full collection on Facebook Marketplace",
+            href: MARKETPLACE_PROFILE_URL,
+          }}
         />
       </div>
 

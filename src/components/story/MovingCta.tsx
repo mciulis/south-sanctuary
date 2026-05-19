@@ -17,19 +17,32 @@ export default function MovingCta({
   backgroundImage,
   footnote,
   showListingLinks = false,
+  buttonHref,
+  buttonTextOverride,
+  bodyOverride,
+  secondaryAction,
 }: {
   content?: MovingCtaContent;
   hideButton?: boolean;
   backgroundImage?: string;
   footnote?: string;
   showListingLinks?: boolean;
+  buttonHref?: string;
+  buttonTextOverride?: string;
+  bodyOverride?: string[];
+  secondaryAction?: { text: string; href: string };
 }) {
   const {
     headline1 = "THE MOVING SALE",
     headline2 = "Is Now Open",
-    body = ["Every piece in this home was chosen deliberately — for its material, its warmth, its relationship to the room it would live in and the other furniture it would live beside. The full collection is being offered fairly to someone who will give it a second life."],
+    body: contentBody = ["Every piece in this home was chosen deliberately — for its material, its warmth, its relationship to the room it would live in and the other furniture it would live beside. The full collection is being offered fairly to someone who will give it a second life."],
     button_text = "Browse the Collection",
   } = content;
+
+  const body = bodyOverride ?? contentBody;
+  const isExternalButton = buttonHref != null && /^https?:\/\//.test(buttonHref);
+  const resolvedButtonHref = buttonHref ?? "/moving-sale";
+  const resolvedButtonText = buttonTextOverride ?? button_text;
 
   return (
     <section className="relative bg-ss-taupe py-24 md:py-36 px-6 overflow-hidden">
@@ -65,12 +78,35 @@ export default function MovingCta({
           </p>
         ))}
         {!hideButton && (
-          <Link
-            href="/moving-sale"
-            className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
+          isExternalButton ? (
+            <a
+              href={resolvedButtonHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track("listing_click", { platform: "marketplace_profile" })}
+              className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
+            >
+              {resolvedButtonText}
+            </a>
+          ) : (
+            <Link
+              href={resolvedButtonHref}
+              className="inline-block border border-white/40 text-white text-[11px] tracking-[0.22em] uppercase px-10 py-4 hover:bg-white hover:text-ss-taupe transition-colors duration-300"
+            >
+              {resolvedButtonText}
+            </Link>
+          )
+        )}
+        {secondaryAction && (
+          <a
+            href={secondaryAction.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("listing_click", { platform: "marketplace_profile" })}
+            className="inline-block text-[11px] tracking-[0.18em] text-white/70 uppercase underline underline-offset-4 hover:text-white transition-colors"
           >
-            {button_text}
-          </Link>
+            {secondaryAction.text} ↗
+          </a>
         )}
         {footnote && (
           <p className="text-[11px] italic text-white/65 mt-10 max-w-xs mx-auto leading-relaxed">

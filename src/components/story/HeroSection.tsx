@@ -44,8 +44,8 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
           >
             Shop the moving sale
           </Link>
-          <p className="text-xs text-white/80 text-center px-4">
-            Moving Sale Open House on Sunday, May 24, 1–4pm ·{" "}
+          <div className="text-xs text-white/80 text-center px-4 flex flex-col items-center gap-1">
+            <p>Moving Sale Open House on Sunday, May 24, 1–4pm</p>
             <a
               href="/open-house.ics"
               onClick={() => track("listing_click", { platform: "open_house_calendar" })}
@@ -53,7 +53,7 @@ export default function HeroSection({ content = {} }: { content?: HeroContent })
             >
               Add to calendar
             </a>
-          </p>
+          </div>
         </div>
       </div>
 

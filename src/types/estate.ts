@@ -17,8 +17,9 @@ export interface Product {
   units_available: number;
   retail_url: string | null;
   main_photo_filename: string | null;
-  status: "available" | "reserved" | "sold";
+  status: "available" | "reserved" | "sold" | "pending";
   available_by: string | null; // ISO date string e.g. "2026-05-15"
+  facebook_url: string | null;
 }
 
 export const conditionLabel: Record<string, string> = {
