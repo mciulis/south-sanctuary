@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, conditionLabel, CONDITION_DISCOUNTS } from "@/types/estate";
 import ProductPhotoModal from "./ProductPhotoModal";
@@ -70,6 +70,7 @@ export default function MovingSaleAdmin() {
   const [addError, setAddError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     supabase
@@ -346,8 +347,8 @@ export default function MovingSaleAdmin() {
           const formulaDiscount = CONDITION_DISCOUNTS[getVal(product, "condition")] ?? 0;
 
           return (
+            <Fragment key={product.id}>
             <div
-              key={product.id}
               className="grid grid-cols-[48px_2fr_1fr_220px_150px_130px_110px_80px_80px_40px] gap-x-3 px-4 py-2.5 border-b border-gray-100 items-center hover:bg-gray-50/50 transition-colors"
             >
               {/* Thumbnail */}
@@ -374,7 +375,15 @@ export default function MovingSaleAdmin() {
                   placeholder="Brand"
                   className="w-full text-[10px] text-gray-400 border-b border-transparent hover:border-gray-300 focus:border-gray-600 bg-transparent focus:outline-none transition-colors truncate"
                 />
-                <p className="text-sm text-gray-800 truncate font-medium">{product.name}</p>
+                <button
+                  type="button"
+                  onClick={() => setExpanded((prev) => ({ ...prev, [product.id]: !prev[product.id] }))}
+                  className="w-full text-left text-sm text-gray-800 font-medium hover:text-gray-600 transition-colors flex items-center gap-1 min-w-0"
+                  title={expanded[product.id] ? "Hide details" : "Edit details"}
+                >
+                  <span className="text-gray-400 text-[10px] shrink-0">{expanded[product.id] ? "▾" : "▸"}</span>
+                  <span className="truncate">{getVal(product, "name")}</span>
+                </button>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="text-[10px] text-gray-400 shrink-0">FB</span>
                   <input
@@ -548,6 +557,130 @@ export default function MovingSaleAdmin() {
                 )}
               </div>
             </div>
+
+            {expanded[product.id] && (
+              <div className="border-b border-gray-100 bg-gray-50/40 px-4 py-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={getVal(product, "name") ?? ""}
+                      onChange={(e) => edit(product.id, "name", e.target.value)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      value={getVal(product, "full_name") ?? ""}
+                      onChange={(e) => edit(product.id, "full_name", e.target.value)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Room</label>
+                    <input
+                      type="text"
+                      value={getVal(product, "room") ?? ""}
+                      onChange={(e) => edit(product.id, "room", e.target.value || null)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Units (total)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={getVal(product, "units") ?? 1}
+                      onChange={(e) => edit(product.id, "units", parseInt(e.target.value) || 1)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Units Available</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={getVal(product, "units_available") ?? 0}
+                      onChange={(e) => edit(product.id, "units_available", parseInt(e.target.value) || 0)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Retail URL</label>
+                    <input
+                      type="url"
+                      value={getVal(product, "retail_url") ?? ""}
+                      onChange={(e) => edit(product.id, "retail_url", e.target.value || null)}
+                      placeholder="https://…"
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Length (in)</label>
+                    <input
+                      type="number"
+                      value={getVal(product, "length_in") ?? ""}
+                      onChange={(e) => edit(product.id, "length_in", e.target.value ? parseFloat(e.target.value) : null)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Width (in)</label>
+                    <input
+                      type="number"
+                      value={getVal(product, "width_in") ?? ""}
+                      onChange={(e) => edit(product.id, "width_in", e.target.value ? parseFloat(e.target.value) : null)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Height (in)</label>
+                    <input
+                      type="number"
+                      value={getVal(product, "height_in") ?? ""}
+                      onChange={(e) => edit(product.id, "height_in", e.target.value ? parseFloat(e.target.value) : null)}
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Dimensions Display (optional override)</label>
+                    <input
+                      type="text"
+                      value={getVal(product, "dimensions_display") ?? ""}
+                      onChange={(e) => edit(product.id, "dimensions_display", e.target.value || null)}
+                      placeholder="e.g. 72” L × 30” W × 30” H (overrides L/W/H above)"
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1">Description</label>
+                    <textarea
+                      rows={4}
+                      value={getVal(product, "description") ?? ""}
+                      onChange={(e) => edit(product.id, "description", e.target.value || null)}
+                      placeholder="Description shown on the listing page…"
+                      className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-gray-600 bg-white resize-y"
+                    />
+                  </div>
+                </div>
+                {dirty && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <button
+                      onClick={() => saveRow(product)}
+                      disabled={saving[product.id]}
+                      className="bg-gray-800 text-white text-sm px-5 py-1.5 hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                    >
+                      {saving[product.id] ? "Saving…" : "Save changes"}
+                    </button>
+                    <span className="text-xs text-gray-500">Unsaved changes</span>
+                  </div>
+                )}
+              </div>
+            )}
+            </Fragment>
           );
         })}
       </div>
